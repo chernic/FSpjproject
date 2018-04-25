@@ -1,4 +1,4 @@
-/* $Id: AgileTest.cpp 5676 2018-04-18 15:19:22Z chernic $ */
+/* $Id: DefaultValue.cpp 5676 2018-04-18 15:19:22Z chernic $ */
 #include "stdafx.h"
 
 #include "pjsua2/util.hpp"
@@ -9,9 +9,9 @@
 
 using namespace std;
 
-#include "AgileTest.h"
+#include "DefaultValue.h"
 
-#define THIS_FILE   "AgileTest.cpp"
+#define THIS_FILE   "DefaultValue.cpp"
 /////////////////////////////////////////////////////////////////////////////
 /** string methods */
 BSTR str2bstr(const char *str, unsigned len){
