@@ -16,20 +16,13 @@
 /// include #include "_IFocusSipEvents_CP.H"
 #include "FocusSip.h"
 
-/////////////////////////////////////////////////////////////////////////////
-//#include "pjlib-util\json.h"
-//#include <pjsua2/json.hpp>
-//#include <pjlib-util/errno.h> 
-//#include <pj/file_io.h>
-/// pjsua2
-#include "util.hpp"
-#include "json.hpp"
-#include "endpoint.hpp"
-#include "account.hpp"
-
+#include "pjsua2/util.hpp"
+#include "pjsua2/json.hpp"
+#include "pjsua2/endpoint.hpp"
+#include "pjsua2/account.hpp"
 #include "focusua.hpp"
 
-#include "AgileTest.h"
+#include "DefaultValue.h"
 
 #define THIS_FILE "FocusSip.cpp"
 
@@ -731,20 +724,20 @@ STDMETHODIMP CFocusSip::aboutbox(
     string  Cbstring =jDoc->saveString();
 */
 
-	int     call_id				= PJSUA_INVALID_ID;
+    int     call_id             = PJSUA_INVALID_ID;
 
-	Fs__Str bsCb0				= DefaultTestJsonString(call_id);
+    Fs__Str bsCb0               = DefaultTestJsonString(call_id);
     HRESULT resTestJsonString   = CFocusSip_Instance->Fire_OnTestJsonString(bsCb0);
 
-	Fs__Str bsCb2               = DefaultIncomingCall(call_id);
-    int      nCb2				= SysStringLen(bsCb2);
-    HRESULT resIncomingCall1	= CFocusSip_Instance->Fire_OnIncomingCall(call_id);
-    HRESULT resIncomingCall2	= CFocusSip_Instance->Fire_OnJsonIncomingCall(call_id, bsCb2, nCb2);
+    Fs__Str bsCb2               = DefaultIncomingCall(call_id);
+    int      nCb2               = SysStringLen(bsCb2);
+    HRESULT resIncomingCall1    = CFocusSip_Instance->Fire_OnIncomingCall(call_id);
+    HRESULT resIncomingCall2    = CFocusSip_Instance->Fire_OnJsonIncomingCall(call_id, bsCb2, nCb2);
 
 
 
-	/////////////////////////////////////////////////////////////////////////////
-	/*
+    /////////////////////////////////////////////////////////////////////////////
+    /*
 
     pjsua_call_info call_info;
     pjsua_call_get_info(call_id, &call_info);
@@ -756,7 +749,7 @@ STDMETHODIMP CFocusSip::aboutbox(
     // ABChernic : 暂时有问题?
     CFocusSip_Instance->Fire_OnCallState(call_id, pCall_Info);
 
-	*/
+    */
 
     //Call *call = Call::lookup(call_id);
     //if (!call) {
