@@ -31,7 +31,35 @@
 *.out
 *.app
 
-# no vs tempfiles
+#######
+.svn
+
+*.ncb
+*.suo
+*.sws
+*.pdsync
+*.pdsyncu
+*.exp
+
+
+*.bsc
+*.dep
+*.obj
+*.res
+*.sbr
+*.tlb
+*.idb
+*.ilk
 *.pdb
 *.pch
-*.ilk
+*.pdb
+*.manifest
+BuildLog.htm
+
+Debug
+Release
+*_CP.H
+*_i.c
+*_i.h
+*_p.c
+*.ocx
