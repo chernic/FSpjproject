@@ -3,10 +3,6 @@
 #pragma once
 #endif
 
-
-
-
-
 // ABChernic
 #include <pj/types.h>
 #include <pjsua-lib/pjsua.h>
@@ -38,8 +34,6 @@ static pj_str_t Pj_str(pj_pool_t *pool, Fs__Str s){
 static void Cp2(BSTR *dst, const pj_str_t *src){
     *dst = str2bstr(src->ptr, src->slen);
 }
-
-
 
 Fs__Str DefaultTestJsonString(int call_id);
 Fs__Str DefaultIncomingCall(int call_id);
