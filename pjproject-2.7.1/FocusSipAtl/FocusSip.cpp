@@ -20,7 +20,7 @@
 #include "pjsua2/json.hpp"
 #include "pjsua2/endpoint.hpp"
 #include "pjsua2/account.hpp"
-#include "focusua.hpp"
+#include "pjsua2/focusua.hpp"
 
 #include "DefaultValue.h"
 
@@ -702,99 +702,6 @@ static void buddyinfo2BuddyInfo           (pjsua_buddy_info* Binfo1, Focusip_Bud
 ///////////////////////////////////////////////////////////////////////////
 // Fuction Fuction Fuction Fuction Fuction Fuction Fuction Fuction Fuction
 ///////////////////////////////////////////////////////////////////////////
-// 001 // (OK)
-STDMETHODIMP CFocusSip::aboutbox(
-        /* [retval][out] */                 Fs__Str                 *ret)
-{
-    
-    int status = pj_init();        //初始化pjlib库返回PJ_SUCCESS表示成功
-    status = pjlib_util_init();    //初始化pjlib-util库
-
-
-    //* ret               = str2bstr("www.focustar.net", 16);
-/*
-    EpConfig epCfg;
-    epCfg.uaConfig.maxCalls = 61;
-    epCfg.uaConfig.userAgent = "Just JSON Test";
-
-    JsonDocument * jDoc = new JsonDocument();
-    jDoc->writeObject(epCfg);
-    jDoc->saveFile("jsontest.js");
-
-    string  Cbstring =jDoc->saveString();
-*/
-
-    int     call_id             = PJSUA_INVALID_ID;
-
-    Fs__Str bsCb0               = DefaultTestJsonString(call_id);
-    HRESULT resTestJsonString   = CFocusSip_Instance->Fire_OnTestJsonString(bsCb0);
-
-    Fs__Str bsCb2               = DefaultIncomingCall(call_id);
-    int      nCb2               = SysStringLen(bsCb2);
-    HRESULT resIncomingCall1    = CFocusSip_Instance->Fire_OnIncomingCall(call_id);
-    HRESULT resIncomingCall2    = CFocusSip_Instance->Fire_OnJsonIncomingCall(call_id, bsCb2, nCb2);
-
-
-
-    /////////////////////////////////////////////////////////////////////////////
-    /*
-
-    pjsua_call_info call_info;
-    pjsua_call_get_info(call_id, &call_info);
-
-    // App Actions
-    Focusip_Call_Info *pCall_Info = new Focusip_Call_Info;
-    callinfo2CallInfo(&call_info, pCall_Info);
-    // 假如hangup, 把本地摄像头视频也关掉
-    // ABChernic : 暂时有问题?
-    CFocusSip_Instance->Fire_OnCallState(call_id, pCall_Info);
-
-    */
-
-    //Call *call = Call::lookup(call_id);
-    //if (!call) {
-    //    return -1;
-    //}
-
-
-/*    HRESULT result=0;
-
-    result = CFocusSip_Instance->Fire_OnAboutBox                ( 1, 2 );          // FLOAT\FLOAT
-
-    pjsua_reg_info rinfo;
-    Focusip_Reg_Info *pReg_Info = new Focusip_Reg_Info;
-    reginfo2RegInfo(&rinfo, pReg_Info);
-    result = CFocusSip_Instance->Fire_OnRegState                ( 2, pReg_Info);   // INT\Focusip_Reg_Info
-
-    pjsua_call_info call_info;
-    pj_bzero(&call_info, sizeof(call_info));   /// 很重要
-
-    Focusip_Call_Info *pCall_Info = new Focusip_Call_Info;
-    Defaultcallinfo2CallInfo(&call_info, pCall_Info);
-    //callinfo2CallInfo(&call_info, pCall_Info);
-    result = CFocusSip_Instance->Fire_OnCallState               ( 3, pCall_Info ); // INT\Focusip_Call_Info
-
-    pjsua_buddy_info buddy_info;
-    pj_bzero(&buddy_info, sizeof(buddy_info)); /// 很重要
-
-    Focusip_Buddy_Info *pBuddy_Info = new Focusip_Buddy_Info;
-    Defaultbuddyinfo2BuddyInfo(&buddy_info, pBuddy_Info);
-    //buddyinfo2BuddyInfo(&buddy_info, pBuddy_Info);
-    result = CFocusSip_Instance->Fire_OnBuddyState              ( 4, pBuddy_Info); // INT\Focusip_Buddy_Info
-
-    BSTR fromUri   = str2bstr("fromUri", 7);
-    BSTR toURI     = str2bstr("toURI", 5);
-    BSTR pagerText = str2bstr("pagerText", 9);
-    result = CFocusSip_Instance->Fire_OnIncomingPager           ( 5, fromUri, toURI, pagerText);// INT\BSTR\BSTR\BSTR
-
-    result = CFocusSip_Instance->Fire_OnIncomingCall            ( 6 );             // INT
-    (
-
-*/
-
-    return S_OK;
-}
-
 // 002 // (OK) pjsua
 STDMETHODIMP CFocusSip::app_construct(
         /* [retval][out] */                 Fs_Stat                 *retStatus)
@@ -1644,6 +1551,93 @@ STDMETHODIMP CFocusSip::vid_win_resize(
     return S_FALSE;
 }
 
+// 001 // (OK)
+STDMETHODIMP CFocusSip::aboutbox(
+        /* [retval][out] */                 Fs__Str                 *ret)
+{
+    // A1 初始化
+    int status;
+
+    status = pj_init();            //初始化pjlib库返回PJ_SUCCESS表示成功
+    if(status){
+    }
+
+    status = pjlib_util_init();    //初始化pjlib-util库
+    if(status){
+    }
+
+    int     call_id             = PJSUA_INVALID_ID;
+
+
+    Fs__Str bsCb0               = DefaultTestJsonString(call_id);
+    HRESULT resTestJsonString   = CFocusSip_Instance->Fire_OnTestJsonString(bsCb0);
+
+    Fs__Str bsCb2               = DefaultIncomingCall(call_id);
+    int      nCb2               = SysStringLen(bsCb2);
+    HRESULT resIncomingCall1    = CFocusSip_Instance->Fire_OnIncomingCall(call_id);
+    HRESULT resIncomingCall2    = CFocusSip_Instance->Fire_OnJsonIncomingCall(call_id, bsCb2, nCb2);
+
+    Fs__Str bsCb3               = DefaultCallState();
+    int      nCb3               = SysStringLen(bsCb3);
+
+    /*
+
+    pjsua_call_info call_info;
+    pjsua_call_get_info(call_id, &call_info);
+
+    // App Actions
+    Focusip_Call_Info *pCall_Info = new Focusip_Call_Info;
+    callinfo2CallInfo(&call_info, pCall_Info);
+    // 假如hangup, 把本地摄像头视频也关掉
+    // ABChernic : 暂时有问题?
+    CFocusSip_Instance->Fire_OnCallState(call_id, pCall_Info);
+
+    */
+
+    //Call *call = Call::lookup(call_id);
+    //if (!call) {
+    //    return -1;
+    //}
+
+
+    /*    
+    HRESULT result=0;
+
+    result = CFocusSip_Instance->Fire_OnAboutBox                ( 1, 2 );          // FLOAT\FLOAT
+
+    pjsua_reg_info rinfo;
+    Focusip_Reg_Info *pReg_Info = new Focusip_Reg_Info;
+    reginfo2RegInfo(&rinfo, pReg_Info);
+    result = CFocusSip_Instance->Fire_OnRegState                ( 2, pReg_Info);   // INT\Focusip_Reg_Info
+
+    pjsua_call_info call_info;
+    pj_bzero(&call_info, sizeof(call_info));   /// 很重要
+
+    Focusip_Call_Info *pCall_Info = new Focusip_Call_Info;
+    Defaultcallinfo2CallInfo(&call_info, pCall_Info);
+    //callinfo2CallInfo(&call_info, pCall_Info);
+    result = CFocusSip_Instance->Fire_OnCallState               ( 3, pCall_Info ); // INT\Focusip_Call_Info
+
+    pjsua_buddy_info buddy_info;
+    pj_bzero(&buddy_info, sizeof(buddy_info)); /// 很重要
+
+    Focusip_Buddy_Info *pBuddy_Info = new Focusip_Buddy_Info;
+    Defaultbuddyinfo2BuddyInfo(&buddy_info, pBuddy_Info);
+    //buddyinfo2BuddyInfo(&buddy_info, pBuddy_Info);
+    result = CFocusSip_Instance->Fire_OnBuddyState              ( 4, pBuddy_Info); // INT\Focusip_Buddy_Info
+
+    BSTR fromUri   = str2bstr("fromUri", 7);
+    BSTR toURI     = str2bstr("toURI", 5);
+    BSTR pagerText = str2bstr("pagerText", 9);
+    result = CFocusSip_Instance->Fire_OnIncomingPager           ( 5, fromUri, toURI, pagerText);// INT\BSTR\BSTR\BSTR
+
+    result = CFocusSip_Instance->Fire_OnIncomingCall            ( 6 );             // INT
+    (
+
+    */
+
+    return S_OK;
+}
 /////////////////////////////////////////////////////////////////////////////
 // Callback Callback Callback Callback Callback Callback Callback Callback
 /////////////////////////////////////////////////////////////////////////////
@@ -1657,10 +1651,8 @@ static void on_call_state(                          // FocusSip : Callback 01 pj
     // App Actions
     Focusip_Call_Info *pCall_Info = new Focusip_Call_Info;
     callinfo2CallInfo(&call_info, pCall_Info);
-    // 假如hangup, 把本地摄像头视频也关掉
-    // ABChernic : 暂时有问题?
+    // ABChernic : 暂时有问题: 假如hangup, 把本地摄像头视频也关掉
     CFocusSip_Instance->Fire_OnCallState(call_id, pCall_Info);
-
 
     /* If the state is DISCONNECTED, call may have already been deleted
      * by the application in the callback, so do not access it anymore here.
@@ -1672,12 +1664,15 @@ static void on_incoming_call(                       // FocusSip : Callback 02 pj
         pjsua_call_id call_id,
         pjsip_rx_data *rdata)
 {
+/*
     JsonOnIncomingCallParam prm;
     JsonDocument    jDoc;
     string          Cbstring;
     Fs__Str         CallBackStr;
 
     prm.fromPj(call_id, *rdata);
+*/
+	/*
     jDoc.writeObject(prm);
     jDoc.saveFile("JsonOnIncomingCallParam.js");
     Cbstring    = jDoc.saveString();
@@ -1685,14 +1680,23 @@ static void on_incoming_call(                       // FocusSip : Callback 02 pj
 
     CFocusSip_Instance->Fire_OnIncomingCall(call_id);
     CFocusSip_Instance->Fire_OnJsonIncomingCall(call_id, CallBackStr, Cbstring.size());
+	*/
 
+
+	Fs__Str bsCb2               = DefaultIncomingCall(call_id);
+    int      nCb2               = SysStringLen(bsCb2);
+    HRESULT resIncomingCall1    = CFocusSip_Instance->Fire_OnIncomingCall(call_id);
+    HRESULT resIncomingCall2    = CFocusSip_Instance->Fire_OnJsonIncomingCall(call_id, bsCb2, nCb2);
+
+
+    ////////////////////////////////////////////////////
     /* disconnect if callback doesn't handle the call */
     pjsua_call_info ci;
     pjsua_call_get_info(call_id, &ci);
-
     if (!pjsua_call_get_user_data(call_id) && ci.state != PJSIP_INV_STATE_DISCONNECTED){
         pjsua_call_hangup(call_id, PJSIP_SC_INTERNAL_SERVER_ERROR, NULL, NULL);
     }
+	////////////////////////////////////////////////////
 }
 //
 static void on_call_tsx_state(                      // FocusSip : Callback 03 pjsua.h

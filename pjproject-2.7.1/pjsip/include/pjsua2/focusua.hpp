@@ -17,13 +17,11 @@
 namespace pj{
 
 /**
- * @defgroup PJSUA2_ACC Account
+ * @defgroup PJSUA2_ACC Focusua
  * @ingroup PJSUA2_Ref
  * @{
  */
-
 using std::string;
-
 struct JsonAccountInfo : public AccountInfo, public PersistentObject{
 public:
     /** Import from pjsip data */
@@ -32,42 +30,147 @@ public:
     virtual void readObject(const ContainerNode &node) throw(Error);
     virtual void writeObject(ContainerNode &node) const throw(Error);
 };
-
-struct JsonOnIncomingCallParam: public PersistentObject{
+struct JsonOnIncomingCallParam: 
+    public PersistentObject
+{
     int         callId;
     string      info;
     string      wholeMsg;
     string      srcAddress;
     // void     *pjRxData;
 public:
-    /*  ä¸æ·»åŠ ä»¥ä¸‹è™šå‡½æ•°åˆ™ä¼šæœ‰ä»¥ä¸‹æŠ¥é”™
-    1>focussip.cpp(1687) : error C2039: â€œfromPjâ€: ä¸æ˜¯â€œpj::JsonOnIncomingCallParamâ€çš„æˆå‘˜
-    1>        account.hpp(1365) : å‚è§â€œpj::JsonOnIncomingCallParamâ€çš„å£°æ˜Ž
+    /*  ²»Ìí¼ÓÒÔÏÂÐéº¯ÊýÔò»áÓÐÒÔÏÂ±¨´í
+    1>focussip.cpp(1687) : error C2039: ¡°fromPj¡±: ²»ÊÇ¡°pj::JsonOnIncomingCallParam¡±µÄ³ÉÔ±
+    1>        account.hpp(1365) : ²Î¼û¡°pj::JsonOnIncomingCallParam¡±µÄÉùÃ÷
      */
     void fromPj(int call_id, pjsip_rx_data &rdata);
 
-    /*  ä¸æ·»åŠ ä»¥ä¸‹è™šå‡½æ•°åˆ™ä¼šæœ‰ä»¥ä¸‹æŠ¥é”™
-    1>focussip.cpp(1686) : error C2259: â€œpj::JsonOnIncomingCallParamâ€: ä¸èƒ½å®žä¾‹åŒ–æŠ½è±¡ç±»
-    1>        ç”±äºŽä¸‹åˆ—æˆå‘˜:
-    1>        â€œvoid pj::PersistentObject::readObject(const pj::ContainerNode &) throw(pj::Error)â€: æ˜¯æŠ½è±¡çš„
-    1>        persistent.hpp(65) : å‚è§â€œpj::PersistentObject::readObjectâ€çš„å£°æ˜Ž
-    1>        â€œvoid pj::PersistentObject::writeObject(pj::ContainerNode &) throw(pj::Error) constâ€: æ˜¯æŠ½è±¡çš„
-    1>        persistent.hpp(72) : å‚è§â€œpj::PersistentObject::writeObjectâ€çš„å£°æ˜Ž
+    /*  ²»Ìí¼ÓÒÔÏÂÐéº¯ÊýÔò»áÓÐÒÔÏÂ±¨´í
+    1>focussip.cpp(1686) : error C2259: ¡°pj::JsonOnIncomingCallParam¡±: ²»ÄÜÊµÀý»¯³éÏóÀà
+    1>        ÓÉÓÚÏÂÁÐ³ÉÔ±:
+    1>        ¡°void pj::PersistentObject::readObject(const pj::ContainerNode &) throw(pj::Error)¡±: ÊÇ³éÏóµÄ
+    1>        persistent.hpp(65) : ²Î¼û¡°pj::PersistentObject::readObject¡±µÄÉùÃ÷
+    1>        ¡°void pj::PersistentObject::writeObject(pj::ContainerNode &) throw(pj::Error) const¡±: ÊÇ³éÏóµÄ
+    1>        persistent.hpp(72) : ²Î¼û¡°pj::PersistentObject::writeObject¡±µÄÉùÃ÷
     */
     virtual void readObject(const ContainerNode &node) throw(Error);
     virtual void writeObject(ContainerNode &node) const throw(Error);
 };
 
-struct JsonOnCallStateParam: 
-    public OnCallStateParam,
-    public PersistentObject
-{
+// 00000000000000000000000000000000000000000000000000000
+struct Json_SipTxData:          public PersistentObject{
+    string          info;
+    string          wholeMsg;
+    SocketAddress   dstAddress;
+    void*           pjTxData;
+    string          void_pjTxData;
 public:
-    void fromPj(int call_id, pjsip_event &rdata);
+    Json_SipTxData();
+    void fromPj                     (pjsip_tx_data &tdata);
+    virtual void readObject         (const ContainerNode &node) throw(Error);
+    virtual void writeObject        (ContainerNode &node) const throw(Error);
+};
+struct Json_SipTransaction:          public PersistentObject{
+    pjsip_role_e        role;           /**< Role (UAS or UAC)      */
+    string              method;         /**< The method.            */
+    int                 statusCode;     /**< Last status code seen. */
+    string              statusText;     /**< Last reason phrase.    */
+    pjsip_tsx_state_e   state;          /**< State.                 */
+    Json_SipTxData      lastTx;         // SipTxData           lastTx;         /**< Msg kept for retrans.  */
+    void               *pjTransaction;  /**< pjsip_transaction.     */
+public:
+    Json_SipTransaction();
+    void fromPj                     (pjsip_transaction &tsx);
+    virtual void readObject         (const ContainerNode &node) throw(Error);
+    virtual void writeObject        (ContainerNode &node) const throw(Error);
+};
+
+// 22222222222222222222222222222222222222222222222222222
+struct Json_TxMsgEvent:         public PersistentObject{
+    Json_SipTxData  tdata;
+public:
+    Json_TxMsgEvent();
+    virtual void readObject         (const ContainerNode &node) throw(Error);
+    virtual void writeObject        (ContainerNode &node) const throw(Error);
+};
+// 33333333333333333333333333333333333333333333333333333
+struct Json_SipRxData:          public PersistentObject{
+    string          info;
+    string          wholeMsg;
+    SocketAddress   srcAddress;
+    void*           pjRxData;
+    string          void_pjRxData;
+public:
+    Json_SipRxData();
+    void fromPj                     (pjsip_rx_data &rdata);
+    virtual void readObject         (const ContainerNode &node) throw(Error);
+    virtual void writeObject        (ContainerNode &node) const throw(Error);
+};
+struct Json_RxMsgEvent:         public PersistentObject{
+    Json_SipRxData  rdata;
+public:
+    Json_RxMsgEvent();
+    virtual void readObject         (const ContainerNode &node) throw(Error);
+    virtual void writeObject        (ContainerNode &node) const throw(Error);
+};
+// 44444444444444444444444444444444444444444444444444444
+struct Json_TxErrorEvent:         public PersistentObject{
+    Json_SipTxData          tdata;  // SipTxData            tdata;
+    Json_SipTransaction     tsx;    // SipTransaction       tsx;
+public:
+    Json_TxErrorEvent();
+    virtual void readObject         (const ContainerNode &node) throw(Error);
+    virtual void writeObject        (ContainerNode &node) const throw(Error);
+};
+// 66666666666666666666666666666666666666666666666666666
+struct Json_UserEvent:          public PersistentObject{
+    GenericData  user1;
+    GenericData  user2;
+    GenericData  user3;
+    GenericData  user4;
+    
+    string  void_user1;
+    string  void_user2;
+    string  void_user3;
+    string  void_user4;
+
+public:
+    Json_UserEvent();
+    void fromPj(const UserEvent &ev);
     virtual void readObject(const ContainerNode &node) throw(Error);
     virtual void writeObject(ContainerNode &node) const throw(Error);
 };
-
+// 00000000000000000000000000000000000000000000000000000
+struct Json_SipEventBody:       public PersistentObject{
+    TimerEvent          timer;
+    TsxStateEvent       tsxState;
+    Json_TxMsgEvent     txMsg;      // 2 TxMsgEvent        txMsg;
+    Json_RxMsgEvent     rxMsg;      // 3 RxMsgEvent        rxMsg;
+    Json_TxErrorEvent   txError;    // 4 TxErrorEvent      txError;
+    Json_UserEvent      user;       // 6 UserEvent         user;
+public:
+    Json_SipEventBody();
+    void fromPj(const pjsip_event &ev);
+    virtual void readObject(const ContainerNode &node) throw(Error);
+    virtual void writeObject(ContainerNode &node) const throw(Error);
+};
+struct Json_SipEvent:           public PersistentObject{
+    pjsip_event_id_e    type;
+    Json_SipEventBody   body;
+    void                *pjEvent;
+public:
+    Json_SipEvent();
+    void fromPj(const pjsip_event &ev);
+    virtual void readObject(const ContainerNode &node) throw(Error);
+    virtual void writeObject(ContainerNode &node) const throw(Error);
+};
+struct JsonOnCallStateParam:    public PersistentObject{
+public:
+    void fromPj(int call_id, pjsip_event &rdata);
+public:
+    virtual void readObject(const ContainerNode &node) throw(Error);
+    virtual void writeObject(ContainerNode &node) const throw(Error);
+};
 
 /**
  * @}  PJSUA2
@@ -76,4 +179,3 @@ public:
 } // namespace pj
 
 #endif  /* __PJSUA2_FOCUSUA_HPP__ */
-

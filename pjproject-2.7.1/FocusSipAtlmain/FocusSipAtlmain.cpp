@@ -126,7 +126,6 @@ public:
 
 		}
 
-
         return S_OK;
     }
 };
@@ -151,7 +150,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		BSTR Gret = ::SysAllocString( L"" );
 
 		Fs_Stat ret;
-		spFocusSip->app_construct( &ret);
+		//spFocusSip->app_construct( &ret);
 
         spFocusSip->aboutbox(&Gret);
 		// 这里输出了 printf信息, 使用了ATL所传过来的参数值

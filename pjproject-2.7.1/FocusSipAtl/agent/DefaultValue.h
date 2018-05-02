@@ -3,12 +3,31 @@
 #pragma once
 #endif
 
-// ABChernic
+// ABChernic 
 #include <pj/types.h>
 #include <pjsua-lib/pjsua.h>
 #include "focusua_typedef.h"
 #include "focusua_common.h"
 #include "focusua_structs.h"
+
+/*
+$(SolutionDir)$(ConfigurationName)\$(ProjectName)
+$(SolutionDir)Deploy\i386-$(PlatformName)-vc8-$(ConfigurationName)\$(ProjectName).ocx
+
+/////////////////////////////////////////////////
+命令:
+// C:\Program Files\Internet Explorer\iexplore.exe
+命令参数:
+// $(SolutionDir)Deploy\FocusSipAtl.html
+工作目录
+// $(SolutionDir)Deploy\i386-Win32-vc8-Debug\
+
+//////////////////////////////////////////////////
+命令:
+$(SolutionDir)Deploy\i386-Win32-vc8-Debug\FocusSipAtlmain.exe
+工作目录:
+$(SolutionDir)Deploy\i386-Win32-vc8-Debug\
+*/
 
 /////////////////////////////////////////////////////////////////////////////
 /** string methods **/
@@ -37,3 +56,4 @@ static void Cp2(BSTR *dst, const pj_str_t *src){
 
 Fs__Str DefaultTestJsonString(int call_id);
 Fs__Str DefaultIncomingCall(int call_id);
+Fs__Str DefaultCallState(void);
