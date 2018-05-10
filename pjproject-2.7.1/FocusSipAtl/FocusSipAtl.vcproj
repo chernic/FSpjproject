@@ -327,7 +327,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\_IVideoAgentEvents_CP.H"
+				RelativePath=".\_IFocusSipEvents_CP.H"
 				>
 			</File>
 			<File

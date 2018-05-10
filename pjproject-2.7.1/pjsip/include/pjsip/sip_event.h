@@ -169,10 +169,10 @@ struct pjsip_event
 #define PJSIP_EVENT_INIT_TSX_STATE(event,ptsx,ptype,pdata,prev)   \
         do { \
             (event).type = PJSIP_EVENT_TSX_STATE;           \
-            (event).body.tsx_state.tsx = ptsx;		    \
+            (event).body.tsx_state.tsx = ptsx;		        \
             (event).body.tsx_state.type = ptype;            \
             (event).body.tsx_state.src.data = pdata;        \
-	    (event).body.tsx_state.prev_state = prev;	    \
+	        (event).body.tsx_state.prev_state = prev;	    \
         } while (0)
 
 /**

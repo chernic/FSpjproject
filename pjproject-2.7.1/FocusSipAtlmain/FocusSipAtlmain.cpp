@@ -26,6 +26,18 @@ public:
     STDMETHODIMP GetTypeInfoCount(UINT *pctinfo) { return E_NOTIMPL; }
     STDMETHODIMP GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)   { return E_NOTIMPL; }
     STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)  { return E_NOTIMPL; }
+    STDMETHODIMP showJsonInvoke(DISPID dispIdMember, DISPPARAMS *pDispParams)
+    {
+		printf(" sink, id: %d, parm : %d . \n", dispIdMember, pDispParams->rgvarg[0].intVal);
+
+		_bstr_t bOn											= pDispParams->rgvarg[1].bstrVal;
+		char*   lpszOn										= bOn;
+		printf(" sink, id: %d, parm : %s . \n", dispIdMember, lpszOn);
+
+		printf(" sink, id: %d, parm : %d . \n", dispIdMember, pDispParams->rgvarg[2].intVal);
+
+		return S_OK;
+	}
     STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
     {
 		printf("\n\nCongratulation! C++ use OCX OK. ");
@@ -49,27 +61,25 @@ public:
 
 
 		// 注意, 参数是从右往左传入
-		if (dispIdMember == ID_OnAboutBox){
-
-			printf("\n\nRaised OnAboutBox(). \n");
+		if (dispIdMember == ID_OnAboutBox){					printf("\n\nRaised OnAboutBox(). \n");
 
 			printf(" sink, id: %d, parmB: %f . \n", dispIdMember, pDispParams->rgvarg[0].fltVal);
 			printf(" sink, id: %d, parmA: %f . \n", dispIdMember, pDispParams->rgvarg[1].fltVal);
 
-
-		}else if (dispIdMember == ID_OnRegState2){
-
-			printf("\n\nRaised OnRegState(). \n");
+		}else if (dispIdMember == ID_OnRegState2){			printf("\n\nRaised OnRegState(). \n");
 
 			printf(" sink, id: %d, parm : %p . \n", dispIdMember, pDispParams->rgvarg[0].pdispVal);
 			printf(" sink, id: %d, parm : %d . \n", dispIdMember, pDispParams->rgvarg[1].intVal);
 
-
 		}else if (dispIdMember == ID_OnCallState){			printf("\n\nRaised OnCallState(). \n");
 
 			printf(" sink, id: %d, parm : %p . \n", dispIdMember, pDispParams->rgvarg[0].intVal);
-
 			printf(" sink, id: %d, parm : %d . \n", dispIdMember, pDispParams->rgvarg[1].intVal);
+
+		// Json
+		}else if (dispIdMember == ID_OnJsonCallState){	printf("\n\nRaised ID_OnJsonCallState(). \n");
+
+			showJsonInvoke(dispIdMember, pDispParams);
 
 		}else if (dispIdMember == ID_OnBuddyState){			printf("\n\nRaised OnBuddyState(). \n");
 
@@ -98,32 +108,18 @@ public:
 		}
 		*/
 		
-
-
 		else if (dispIdMember == ID_OnIncomingCall){		printf("\n\nRaised OnIncomingCall(). \n");
 
 			printf(" sink, id: %d, parm : %d . \n", dispIdMember, pDispParams->rgvarg[0].intVal);
 
 		}
+		// Json
 		else if (dispIdMember == ID_OnJsonIncomingCall){	printf("\n\nRaised OnJsonIncomingCall(). \n");
-
-			printf(" sink, id: %d, parm : %d . \n", dispIdMember, pDispParams->rgvarg[0].intVal);
-
-			_bstr_t bOnJsonIncomingCall						    = pDispParams->rgvarg[1].bstrVal;
-			char* lpszOnJsonIncomingCall						= bOnJsonIncomingCall;
-			printf(" sink, id: %d, parm : %s . \n", dispIdMember, lpszOnJsonIncomingCall);
-
-			printf(" sink, id: %d, parm : %d . \n", dispIdMember, pDispParams->rgvarg[2].intVal);
+			showJsonInvoke(dispIdMember, pDispParams);
 		}
-
-
-
-		else if (dispIdMember == ID_OnTestJsonString){		printf("\n\nRaised OnPassJsonString(). \n");
-
-			_bstr_t bOnPassJsonString							= pDispParams->rgvarg[0].bstrVal;
-			char* lpszOnPassJsonString							= bOnPassJsonString;
-			printf(" sink, id: %d, parm : %s . \n", dispIdMember, lpszOnPassJsonString);
-
+		// Json
+		else if (dispIdMember == ID_OnJsonTestString){		printf("\n\nRaised OnPassJsonString(). \n");
+			showJsonInvoke(dispIdMember, pDispParams);
 		}
 
         return S_OK;
@@ -149,7 +145,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		BSTR Gret = ::SysAllocString( L"" );
 
-		Fs_Stat ret;
+		//Fs_Stat ret;
 		//spFocusSip->app_construct( &ret);
 
         spFocusSip->aboutbox(&Gret);

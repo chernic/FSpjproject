@@ -87,9 +87,9 @@ static void on_call_media_state(pjsua_call_id call_id)
     pjsua_call_get_info(call_id, &ci);
 
     if (ci.media_status == PJSUA_CALL_MEDIA_ACTIVE) {
-	// When media is active, connect call to sound device.
-	pjsua_conf_connect(ci.conf_slot, 0);
-	pjsua_conf_connect(0, ci.conf_slot);
+        // When media is active, connect call to sound device.
+        pjsua_conf_connect(ci.conf_slot, 0);
+        pjsua_conf_connect(0, ci.conf_slot);
     }
 }
 

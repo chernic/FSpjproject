@@ -471,27 +471,27 @@ LRESULT CmainDlg::onCallState(WPARAM wParam,LPARAM lParam)
 
 static void on_call_media_state(pjsua_call_id call_id)
 {
-	pjsua_call_info *call_info = new pjsua_call_info();
-	if (pjsua_call_get_info(call_id, call_info) != PJ_SUCCESS || call_info->state == PJSIP_INV_STATE_NULL) {
-		return;
-	}
-	if (call_info->media_status == PJSUA_CALL_MEDIA_ACTIVE
-		|| call_info->media_status == PJSUA_CALL_MEDIA_REMOTE_HOLD
-		) {
-			msip_conference_join(call_info);
-			pjsua_conf_connect(call_info->conf_slot, 0);
-			pjsua_conf_connect(0, call_info->conf_slot);
-			//--
-			::SetTimer(mainDlg->pageDialer->m_hWnd,IDT_TIMER_VU_METER,100,NULL);
-			//--
-	} else {
-		msip_conference_leave(call_info, true);
-		pjsua_conf_disconnect(call_info->conf_slot, 0);
-		pjsua_conf_disconnect(0, call_info->conf_slot);
-		call_deinit_tonegen(call_id);
-		//--
-	}
-	PostMessage(mainDlg->m_hWnd, UM_ON_CALL_MEDIA_STATE, (WPARAM) call_info, 0);
+    pjsua_call_info *call_info = new pjsua_call_info();
+    if (pjsua_call_get_info(call_id, call_info) != PJ_SUCCESS || call_info->state == PJSIP_INV_STATE_NULL) {
+        return;
+    }
+    if (call_info->media_status == PJSUA_CALL_MEDIA_ACTIVE
+        || call_info->media_status == PJSUA_CALL_MEDIA_REMOTE_HOLD
+        ) {
+            msip_conference_join(call_info);
+            pjsua_conf_connect(call_info->conf_slot, 0);
+            pjsua_conf_connect(0, call_info->conf_slot);
+            //--
+            ::SetTimer(mainDlg->pageDialer->m_hWnd,IDT_TIMER_VU_METER,100,NULL);
+            //--
+    } else {
+        msip_conference_leave(call_info, true);
+        pjsua_conf_disconnect(call_info->conf_slot, 0);
+        pjsua_conf_disconnect(0, call_info->conf_slot);
+        call_deinit_tonegen(call_id);
+        //--
+    }
+    PostMessage(mainDlg->m_hWnd, UM_ON_CALL_MEDIA_STATE, (WPARAM) call_info, 0);
 }
 
 LRESULT CmainDlg::onCallMediaState(WPARAM wParam,LPARAM lParam)

@@ -651,42 +651,48 @@ void Endpoint::on_incoming_call(
                         pjsua_acc_id acc_id, 
                         pjsua_call_id call_id,
                         pjsip_rx_data *rdata){
+
+//{ PJSUA only 20180510-1200
     Account *acc = lookupAcc(acc_id, "on_incoming_call()");
     if (!acc) {
-    pjsua_call_hangup(call_id, PJSIP_SC_INTERNAL_SERVER_ERROR, NULL, NULL);
-    return;
+        pjsua_call_hangup(call_id, PJSIP_SC_INTERNAL_SERVER_ERROR, NULL, NULL);
+        return;
     }
 
     pjsua_call *call = &pjsua_var.calls[call_id];
     if (!call->incoming_data) {
-    /* This happens when the incoming call callback has been called from 
-     * inside the on_create_media_transport() callback. So we simply 
-     * return here to avoid calling the callback twice. 
-     */
-    return;
+        /* This happens when the incoming call callback has been called from 
+         * inside the on_create_media_transport() callback. So we simply 
+         * return here to avoid calling the callback twice. 
+         */
+        return;
     }
+//}
 
-    /* call callback */
+//{ callback: incoming_call 
     OnIncomingCallParam prm;
     prm.callId = call_id;
     prm.rdata.fromPj(*rdata);
 
     acc->onIncomingCall(prm);
+//}
 
+//{ PJSUA only 20180510-1200
     /* Free cloned rdata. */
     pjsip_rx_data_free_cloned(call->incoming_data);
     call->incoming_data = NULL;
+//} 
 
     /* disconnect if callback doesn't handle the call */
     pjsua_call_info ci;
 
     pjsua_call_get_info(call_id, &ci);
     if (!pjsua_call_get_user_data(call_id) &&
-    ci.state != PJSIP_INV_STATE_DISCONNECTED)
-    {
-    pjsua_call_hangup(call_id, PJSIP_SC_INTERNAL_SERVER_ERROR, NULL, NULL);
+    ci.state != PJSIP_INV_STATE_DISCONNECTED){
+        pjsua_call_hangup(call_id, PJSIP_SC_INTERNAL_SERVER_ERROR, NULL, NULL);
     }
 }
+
 // E16----> F03
 void Endpoint::on_call_tsx_state(
                         pjsua_call_id call_id,
@@ -694,11 +700,14 @@ void Endpoint::on_call_tsx_state(
                         pjsip_event *e){
     PJ_UNUSED_ARG(tsx);
 
+//{ PJSUA only 20180510-1200
     Call *call = Call::lookup(call_id);
     if (!call) {
     return;
     }
-    
+//}
+
+    /* call_tsx_state callback */
     OnCallTsxStateParam prm;
     prm.e.fromPj(*e);
     
@@ -707,10 +716,13 @@ void Endpoint::on_call_tsx_state(
 // E17----> F04
 void Endpoint::on_call_media_state(
                         pjsua_call_id call_id){
+
+//{ PJSUA only 20180510-1200
     Call *call = Call::lookup(call_id);
     if (!call) {
     return;
     }
+//}
 
     OnCallMediaStateParam prm;
     call->processMediaUpdate(prm);

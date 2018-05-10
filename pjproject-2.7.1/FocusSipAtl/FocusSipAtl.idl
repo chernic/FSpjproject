@@ -1,7 +1,7 @@
 // FocusSipAtl.idl : FocusSipAtl 的 IDL 源
-// 
+//
 
-// 
+//
 // 此文件将由 MIDL 工具处理以
 // 产生类型库(FocusSipAtl.tlb)和封送处理代码。
 
@@ -12,9 +12,9 @@ import "ocidl.idl";
 import "focusua_structs.idl";
 
 // idl 编译器会将 以下变量翻译成C语言
-// 并生成在文件FocusSipAtl_i.h 
+// 并生成在文件FocusSipAtl_i.h
 const USHORT ID_OnAboutBox             = 999;
-const USHORT ID_OnTestJsonString       = 100;
+const USHORT ID_OnJsonTestString       = 100;
 
 const USHORT ID_OnCallState            = 1;
 const USHORT ID_OnJsonCallState        = 101;
@@ -263,6 +263,7 @@ library FocusSipAtlLib{
     //Chernic: 回调函数(事件) 接口
     //Chernic: 需要在创建FocusSip类时,在options那里选上connection point
     //Chernic: 选择类视图, 添加方法
+
     [
       uuid(DC91CBCE-4B9E-4369-80B9-39341EEFD814),
       helpstring("_IFocusSipEvents Interface")
@@ -274,15 +275,15 @@ library FocusSipAtlLib{
 
             // 999
             [id(ID_OnAboutBox), helpstring("method OnAboutBox")]                        void OnAboutBox(
-                [in] FLOAT parmA,      [in] FLOAT parmB);
+                [in] FLOAT parmA,       [in] FLOAT parmB);
             // 100
-            [id(ID_OnTestJsonString), helpstring("method OnTestJsonString")]            void OnTestJsonString(
-                [in] BSTR json);
+            [id(ID_OnJsonTestString), helpstring("method OnTestJsonString")]            void OnTestJsonString(
+               [in] INT callIndex,      [in] BSTR jsonData,    [in] INT jsonSize);
 
 
             // 001
             [id(ID_OnCallState), helpstring("method OnCallState")]                      void OnCallState(
-                [in] INT callIndex,    [in] Focusip_Call_Info*  cInfo);
+                [in] INT callIndex,     [in] Focusip_Call_Info*  cInfo);
             // 101
             [id(ID_OnJsonCallState), helpstring("method OnJsonCallState")]              void OnJsonCallState(
                 [in] INT callIndex,     [in] BSTR jsonData, [in] INT jsonSize);
@@ -298,15 +299,15 @@ library FocusSipAtlLib{
 
             // 003
             [id(ID_OnTsxState), helpstring("method OnCallTsxState")]                    void OnCallTsxState(
-                [in] INT callIndex);
+                [in] INT callIndex,     [in] Focusip_Call_Info*  cInfo);
             // 103
             [id(ID_OnJsonTsxState), helpstring("method OnJsonTsxState")]                void OnJsonTsxState(
                 [in] INT callIndex,     [in] BSTR jsonData, [in] INT jsonSize);
 
 
             // 004
-            [id(ID_OnMediaState), helpstring("method OnMediaState")]                    void OnMediaState(
-                [in] INT callIndex);
+            [id(ID_OnMediaState), helpstring("method OnMediaState1")]                    void OnMediaState(
+                [in] INT callIndex,     [in] Focusip_Call_Info*  cInfo);
             // 104
             [id(ID_OnJsonMediaState), helpstring("method OnJsonMediaState")]            void OnJsonMediaState(
                 [in] INT callIndex,     [in] BSTR jsonData, [in] INT jsonSize);

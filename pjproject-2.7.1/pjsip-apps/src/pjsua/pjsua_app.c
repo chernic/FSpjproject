@@ -301,7 +301,6 @@ static void on_call_video_state(pjsua_call_info *ci, unsigned mi,
     PJ_UNUSED_ARG(has_error);
 }
 
-
 /* On 1
  * Handler when invite state has changed.
  */
@@ -424,40 +423,39 @@ static void on_call_media_state(
     pjsua_call_get_info(call_id, &call_info);
 
     for (mi=0; mi<call_info.media_cnt; ++mi) {
-    on_call_generic_media_state(&call_info, mi, &has_error);
+        on_call_generic_media_state(&call_info, mi, &has_error);
 
-    switch (call_info.media[mi].type) {
-    case PJMEDIA_TYPE_AUDIO:
-        on_call_audio_state(&call_info, mi, &has_error);
-        break;
-    case PJMEDIA_TYPE_VIDEO:
-        on_call_video_state(&call_info, mi, &has_error);
-        break;
-    default:
-        /* Make gcc happy about enum not handled by switch/case */
-        break;
-    }
+        switch (call_info.media[mi].type) {
+        case PJMEDIA_TYPE_AUDIO:
+            on_call_audio_state(&call_info, mi, &has_error);
+            break;
+        case PJMEDIA_TYPE_VIDEO:
+            on_call_video_state(&call_info, mi, &has_error);
+            break;
+        default:
+            /* Make gcc happy about enum not handled by switch/case */
+            break;
+        }
     }
 
     if (has_error) {
-    pj_str_t reason = pj_str("Media failed");
-    pjsua_call_hangup(call_id, 500, &reason, NULL);
+        pj_str_t reason = pj_str("Media failed");
+        pjsua_call_hangup(call_id, 500, &reason, NULL);
     }
 
 #if PJSUA_HAS_VIDEO
     /* Check if remote has just tried to enable video */
-    if (call_info.rem_offerer && call_info.rem_vid_cnt)
-    {
-    int vid_idx;
+    if (call_info.rem_offerer && call_info.rem_vid_cnt){
+        int vid_idx;
 
-    /* Check if there is active video */
-    vid_idx = pjsua_call_get_vid_stream_idx(call_id);
-    if (vid_idx == -1 || call_info.media[vid_idx].dir == PJMEDIA_DIR_NONE) {
-        PJ_LOG(3,(THIS_FILE,
-              "Just rejected incoming video offer on call %d, "
-              "use \"vid call enable %d\" or \"vid call add\" to "
-              "enable video!", call_id, vid_idx));
-    }
+        /* Check if there is active video */
+        vid_idx = pjsua_call_get_vid_stream_idx(call_id);
+        if (vid_idx == -1 || call_info.media[vid_idx].dir == PJMEDIA_DIR_NONE) {
+            PJ_LOG(3,(THIS_FILE,
+                  "Just rejected incoming video offer on call %d, "
+                  "use \"vid call enable %d\" or \"vid call add\" to "
+                  "enable video!", call_id, vid_idx));
+        }
     }
 #endif
 }

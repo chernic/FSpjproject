@@ -8,13 +8,11 @@
 #include "pjsua2/focusua.hpp"
 
 using namespace std;
-
 #include "DefaultValue.h"
-
 #define THIS_FILE "DefaultValue.cpp"
 
 ///////////////////////////////////////////
-/** string methods */
+// String methods
 BSTR str2bstr(const char *str, unsigned len){
     if (len == 0) {
         return SysAllocString(L"");
@@ -55,11 +53,8 @@ static string GetCurrentDir(const string &path){
     sFileName.append(path);
     return sFileName;
 }
-
-
-/* Transaction layer module definition. */
-static struct mod_tsx_layer
-{
+// Transaction layer module definition.
+static struct mod_tsx_layer{
     struct pjsip_module  mod;
     pj_pool_t       *pool;
     pjsip_endpoint  *endpt;
@@ -80,28 +75,43 @@ static struct mod_tsx_layer
     NULL
     }
 };
+
 ///////////////////////////////////////////
-Fs__Str DefaultTestJsonString(int call_id){
-    pj::EpConfig prm;
-    prm.uaConfig.maxCalls = 61;
-    prm.uaConfig.userAgent = "DefaultTestJsonString";
-
-    pj::JsonDocument jDoc;
-    jDoc.writeObject(prm);
-
-    string  sCb  = jDoc.saveString();
-    Fs__Str bsCb = str2bstr( sCb.data(), sCb.size());
-
-#ifndef DO_NOT_SAVE_JDOC
-    string sFilDir = string( "DefaultTestJsonString.json" );
-    sFilDir = GetCurrentDir( "DefaultTestJsonString.json" );
-    jDoc.saveFile( sFilDir );
-#endif
-
+// Common values settings
+Fs__Str pjsip_event2JsonSipEvent        (pjsip_event *e){
+    PJ_UNUSED_ARG( e );
+    
+    string  sCb   = string("");
+    Fs__Str bsCb  = str2bstr( sCb.data(), sCb.size());
     return bsCb;
 }
 
-void Default_rx_data( pjsip_rx_data * rdata ){
+int     default_CallInfo( Focusip_Call_Info *c2){
+    pjsua_call_info *pc1;
+    pjsua_call_info c1;
+    pj_bzero(&c1,  sizeof(c1));
+    pc1 = &c1;
+
+    pjsua_call_id callIndex =  pc1->id;
+    c2->index               =  callIndex;
+    c2->active              =  0;
+    c2->is_uac              = (pc1->role == PJSIP_ROLE_UAC);
+    Cp(c2->local_info,        &pc1->local_info);
+    Cp(c2->remote_info,       &pc1->remote_info);
+    c2->state               = (Focusip_Call_State)pc1->state;
+    Cp(c2->state_text,        &pc1->state_text);
+    c2->connect_duration    =  pc1->connect_duration.sec;
+    c2->total_duration      =  pc1->total_duration.sec;
+    c2->last_status         =  pc1->last_status;
+    Cp(c2->last_status_text,  &pc1->last_status_text);
+    c2->has_media           =  0;
+    c2->conf_slot           =  pc1->conf_slot;
+
+    pj_bzero(&c1,  sizeof(c1));
+    pc1 = NULL;
+    return 0;
+}
+void    default_rx_data ( pjsip_rx_data * rdata ){
     // srcAddress
     pj_sockaddr_in  addr;
     pj_str_t        s;
@@ -118,7 +128,7 @@ void Default_rx_data( pjsip_rx_data * rdata ){
     pj_memcpy(&rdata->pkt_info.src_addr,  &addr,  sizeof(addr) );
     rdata->pkt_info.len         = 9;
 }
-void Default_tx_data( pjsip_tx_data * rdata ){
+void    default_tx_data ( pjsip_tx_data * rdata ){
     // srcAddress
     pj_sockaddr_in  addr;
     pj_str_t        s;
@@ -135,81 +145,43 @@ void Default_tx_data( pjsip_tx_data * rdata ){
     pj_memcpy(&rdata->tp_info.dst_addr,  &addr,  sizeof(addr) );
     rdata->tp_info.dst_addr_len = 9;
 }
-Fs__Str DefaultIncomingCall(int call_id){
-    pjsip_rx_data *rdata = new pjsip_rx_data();
-    Default_rx_data(rdata);
 
-    pj::JsonOnIncomingCallParam prm;
-    prm.fromPj(call_id, *rdata);
-    rdata = NULL;
-    
-    pj::JsonDocument jDoc;
-    jDoc.writeObject(prm);
-    string  sCb  = jDoc.saveString();
-    Fs__Str bsCb = str2bstr( sCb.data(), sCb.size());
-
-#ifndef DO_NOT_SAVE_JDOC
-    string sFilDir = string( "DefaultIncomingCall.json" );
-    sFilDir = GetCurrentDir( "DefaultIncomingCall.json" );
-    jDoc.saveFile( sFilDir );
-#endif
-
-    return bsCb;
-}
-Fs__Str DefaultCallState(void){
+///////////////////////////////////////////
+Fs__Str DefaultJsonSipEvent(void){
     pj::Json_SipEvent prm;
     pj::JsonDocument jDoc;
 
-    // prm.type = PJSIP_EVENT_TIMER;               // 1
-    // prm.type = PJSIP_EVENT_TX_MSG;              // 2
-    // prm.type = PJSIP_EVENT_RX_MSG;              // 3
-    prm.type = PJSIP_EVENT_TRANSPORT_ERROR;     // 4
-    // prm.type = PJSIP_EVENT_TSX_STATE;           // 5
-    // prm.type = PJSIP_EVENT_USER;                // 6
-    
+    // prm.type = PJSIP_EVENT_TIMER;                // 1
+    // prm.type = PJSIP_EVENT_TX_MSG;               // 2
+    // prm.type = PJSIP_EVENT_RX_MSG;               // 3
+    // prm.type = PJSIP_EVENT_TRANSPORT_ERROR;      // 4
+    prm.type = PJSIP_EVENT_TSX_STATE;               // 5
+    // prm.type = PJSIP_EVENT_USER;                 // 6
+
     string  sCb   = string("");
     Fs__Str bsCb  = str2bstr( sCb.data(), sCb.size());
-
+    
+    // Chernic : See more in X\pjsip\include\pjsua2\focusua.hpp
     switch(prm.type){
-        //{
-        // #define PJSIP_EVENT_INIT_TIMER(event,pentry)                     
-        // #define PJSIP_EVENT_INIT_TSX_STATE(event,ptsx,ptype,pdata,prev)  
-        // #define PJSIP_EVENT_INIT_TX_MSG(event,ptdata)                    
-        // #define PJSIP_EVENT_INIT_RX_MSG(event,prdata)                    
-        // #define PJSIP_EVENT_INIT_TRANSPORT_ERROR(event,ptsx,ptdata)      
-        // #define PJSIP_EVENT_INIT_USER(event,u1,u2,u3,u4)                 
-
-        // Line 281:  struct pjsip_rx_data
-        // Line 508:  struct pjsip_tx_data
-        // Line 776:  struct pjsip_transport
-        // Line 1001: struct pjsip_tpfactory
-        
-        //$(SolutionDir)\Deploy\i386-$(PlatformName)-vc8-$(ConfigurationName)\$(ProjectName).ocx
-        
-        // PJSIP_EVENT_UNKNOWN          0
-        // PJSIP_EVENT_TIMER            1
-        // PJSIP_EVENT_TX_MSG           2#
-        // PJSIP_EVENT_RX_MSG           3#
-        // PJSIP_EVENT_TRANSPORT_ERROR  4#
-        // PJSIP_EVENT_TSX_STATE        5
-        // PJSIP_EVENT_USER             6#
-
-        // TimerEvent      timer;           1               ( TimerEntry
-        // TxMsgEvent      txMsg;           2               ( SipTxData       SipTransaction
-        // RxMsgEvent      rxMsg;           3               ( SipRxData
-        // TxErrorEvent    txError;          4              ( SipTxData       SipTransaction
-        // TsxStateEvent   tsxState;         5              ( TsxStateEventSrc
-        // UserEvent       user;            6               ( GenericData
-        //}
         case PJSIP_EVENT_TIMER:{            //1
+            // pjsip_event event;
+            // pjsip_tx_data event_timer_tdata;
+            // default_tx_data(tdata);
+            // PJSIP_EVENT_INIT_TX_MSG(event, tdata);
+            // tdata = NULL;
+
+            // prm.fromPj(event);
+            // jDoc.writeObject(prm);
+
+            // sCb  = jDoc.saveString();
+            // bsCb = str2bstr( sCb.data(), sCb.size());
         }break;
         case PJSIP_EVENT_TX_MSG:{           //2
-            pjsip_event         event;
-            pjsip_tx_data       *tdata = new pjsip_tx_data();
+            pjsip_event event;
+            pjsip_tx_data tx_msg_tdata;
+            default_tx_data(&tx_msg_tdata);
             
-            Default_tx_data(tdata);
-            PJSIP_EVENT_INIT_TX_MSG(event, tdata);
-            tdata = NULL;
+            PJSIP_EVENT_INIT_TX_MSG(event, &tx_msg_tdata);
 
             prm.fromPj(event);
             jDoc.writeObject(prm);
@@ -218,11 +190,10 @@ Fs__Str DefaultCallState(void){
             bsCb = str2bstr( sCb.data(), sCb.size());
         }break;
         case PJSIP_EVENT_RX_MSG:{           //3
-            pjsip_event         event;
-            pjsip_rx_data       *prdata = new pjsip_rx_data();
-            
-            Default_rx_data(prdata);
-            PJSIP_EVENT_INIT_RX_MSG(event, prdata);
+            pjsip_event event;
+            pjsip_rx_data rx_msg_rx_data;
+            default_rx_data(&rx_msg_rx_data);
+            PJSIP_EVENT_INIT_RX_MSG(event, &rx_msg_rx_data);
 
             prm.fromPj(event);
             jDoc.writeObject(prm);
@@ -232,8 +203,9 @@ Fs__Str DefaultCallState(void){
         }break;
         case PJSIP_EVENT_TRANSPORT_ERROR:{  //4 This One may not test while is not runtime.
             // via : pjsip\sip_transaction.c tsx_create()
-            pjsip_transaction   *ptsx;
-/*
+            pjsip_event event;
+            pjsip_transaction *ptsx= NULL;
+            /*
             pj_pool_t           *pool;
             pjsip_transaction   *tsx;
             pj_status_t         status;
@@ -266,16 +238,12 @@ Fs__Str DefaultCallState(void){
             }
 
             ptsx = tsx;
-*/
-
-            ptsx = NULL;
-
-            pjsip_event         event;
-            pjsip_tx_data      *ptdata = new pjsip_tx_data();
-
-            Default_tx_data(ptdata);
-            PJSIP_EVENT_INIT_TRANSPORT_ERROR(event, ptsx, ptdata);
-            ptdata = NULL;
+            */
+            pjsip_tx_data transport_tx_data;
+            default_tx_data(&transport_tx_data);
+            
+            PJSIP_EVENT_INIT_TRANSPORT_ERROR(event, ptsx, &transport_tx_data);
+            ptsx  = NULL;
 
             prm.fromPj(event);
             jDoc.writeObject(prm);
@@ -284,8 +252,53 @@ Fs__Str DefaultCallState(void){
             bsCb = str2bstr( sCb.data(), sCb.size());
         }break;
         case PJSIP_EVENT_TSX_STATE:{        //5
-            //pjsip_transport *tdata = new pjsip_transport();
+            pjsip_event         e;                              // p1
+            pjsip_transaction   *ptsx = NULL;                   // p2
+            pjsip_event_id_e    event_src_type;                 // p3
+            pjsip_rx_data       *event_src = NULL;              // p4
+            pjsip_tsx_state_e   prev_state;                     // p5
 
+            // must : ptsx->state < PJSIP_TSX_STATE_TERMINATED  //
+            // ptsx->state  = PJSIP_TSX_STATE_CONFIRMED;        // 5
+            prev_state      = PJSIP_TSX_STATE_CONFIRMED;        // 5
+
+            // event_src_type = PJSIP_EVENT_TIMER;              // 1
+            //event_src_type  = PJSIP_EVENT_TX_MSG;             // 2
+            event_src_type    = PJSIP_EVENT_RX_MSG;             // 3
+            // event_src_type = PJSIP_EVENT_TRANSPORT_ERROR;    // 4
+            // event_src_type = PJSIP_EVENT_USER;               // 6
+
+             // "Json_TsxStateEvent":   { 
+                // "prevState":            5,
+                // "type":                 3
+             // },
+
+            if (event_src_type==PJSIP_EVENT_TIMER){
+                //PJSIP_EVENT_INIT_TSX_STATE(e, ptsx, event_src_type, NULL, prev_state);
+            }
+            // Chernic : Callback Fuction is happened here.
+            // X\pjsip\src\pjsip\sip_transaction.c line:1168
+            // PJSIP_EVENT_INIT_TSX_STATE(e, tsx, event_src_type, event_src, prev_state);
+            // (*tsx->tsx_user->on_tsx_state)(tsx, &e);
+            if (event_src_type==PJSIP_EVENT_RX_MSG){
+                pjsip_rx_data tsx_state_rx_msg_rx_data;
+                default_rx_data(&tsx_state_rx_msg_rx_data);
+
+                PJSIP_EVENT_INIT_TSX_STATE(e, ptsx, event_src_type, event_src, prev_state);
+            }
+            // Chernic : Callback Fuction is happened here.
+            // X\pjsip\src\pjsip\sip_transaction.c line:1168
+            // PJSIP_EVENT_INIT_TSX_STATE(e, tsx, PJSIP_EVENT_TRANSPORT_ERROR, NULL, prev_state);
+            // (*tsx->tsx_user->on_tsx_state)(tsx, &e);
+            if (event_src_type==PJSIP_EVENT_TRANSPORT_ERROR){
+                PJSIP_EVENT_INIT_TSX_STATE(e, ptsx, event_src_type, NULL, prev_state);
+            }
+
+            prm.fromPj(e);
+            jDoc.writeObject(prm);
+
+            sCb  = jDoc.saveString();
+            bsCb = str2bstr( sCb.data(), sCb.size());
         }break;
         case PJSIP_EVENT_USER:{             //6#
             pjsip_event event;
@@ -312,5 +325,73 @@ Fs__Str DefaultCallState(void){
     jDoc.saveFile( sFilDir );
 #endif
 
+    return bsCb;
+}
+Fs__Str DefaultJsonMediaStateParam(void){
+    pj::Json_SipEvent prm;
+
+    string  sCb   = string("");
+    Fs__Str bsCb  = str2bstr( sCb.data(), sCb.size());
+
+    return bsCb;
+}
+///////////////////////////////////////////
+// 100 TestString
+Fs__Str DefaultJsonTestString           (int call_id){
+    pj::EpConfig prm;
+    prm.uaConfig.maxCalls = 61;
+    prm.uaConfig.userAgent = "DefaultTestJsonString";
+
+    pj::JsonDocument jDoc;
+    jDoc.writeObject(prm);
+
+    string  sCb  = jDoc.saveString();
+    Fs__Str bsCb = str2bstr( sCb.data(), sCb.size());
+
+#ifndef DO_NOT_SAVE_JDOC
+    string sFilDir = string( "DefaultTestJsonString.json" );
+    sFilDir = GetCurrentDir( "DefaultTestJsonString.json" );
+    jDoc.saveFile( sFilDir );
+#endif
+
+    return bsCb;
+}
+// 101 CallState
+Fs__Str DefaultJsonCallState            (void){
+    Fs__Str bsCb  = DefaultJsonSipEvent();;
+    return bsCb;
+}
+// 102 IncomingCall
+Fs__Str DefaultJsonOnIncomingCallParam  (int call_id){
+    pjsip_rx_data rdata;
+    default_rx_data(&rdata);
+
+    pj::JsonOnIncomingCallParam prm;
+    prm.fromPj(call_id, rdata);
+
+    pj::JsonDocument jDoc;
+    jDoc.writeObject(prm);
+    string  sCb  = jDoc.saveString();
+    Fs__Str bsCb = str2bstr( sCb.data(), sCb.size());
+
+#ifndef DO_NOT_SAVE_JDOC
+    string sFilDir = string( "DefaultIncomingCall.json" );
+    sFilDir = GetCurrentDir( "DefaultIncomingCall.json" );
+    jDoc.saveFile( sFilDir );
+#endif
+    return bsCb;
+}
+// 103 TsxState
+Fs__Str DefaultJsonTsxState             (void){
+    Fs__Str bsCb  = DefaultJsonSipEvent();;
+    return bsCb;
+}
+// 
+Fs__Str DefaultJsonMediaState           (void){
+    // PJ_UNUSED_ARG( e );
+    // string  sCb   = string("");
+    // Fs__Str bsCb  = str2bstr( sCb.data(), sCb.size());
+
+    Fs__Str bsCb  = DefaultJsonSipEvent();;
     return bsCb;
 }

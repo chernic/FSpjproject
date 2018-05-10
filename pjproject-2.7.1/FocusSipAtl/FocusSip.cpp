@@ -1,4 +1,4 @@
-// FocusSip.cpp : CFocusSip 的实现
+/// FocusSip.cpp : CFocusSip 的实现
 #include "stdafx.h"
 // ABChernic
 #include <pj/types.h>
@@ -189,8 +189,6 @@ static void on_stream_destroyed(
 CFocusSip::CFocusSip(){
     CFocusSip_Instance = this;
 }
-
-
 
 /////////////////////////////////////////////////////////////////////////////
 /** CLI callback **/
@@ -541,44 +539,7 @@ static void accinfo2AccInfo         (pjsua_acc_info *info1,   Focusip_Acc_Info *
     info2->online_status = info1->online_status;
     */
 }
-// 07 通话信息
-static void Defaultcallinfo2CallInfo      (pjsua_call_info* c1,      Focusip_Call_Info *c2){
-    pj_memset(c2, 0, sizeof(Focusip_Call_Info));
 
-    pjsua_call_id callIndex =  c1->id;
-    c2->index               =  callIndex;
-    c2->active              =  0;
-    c2->is_uac              = (c1->role == PJSIP_ROLE_UAC);
-    Cp(c2->local_info,        &c1->local_info);
-    Cp(c2->remote_info,       &c1->remote_info);
-    c2->state               = (Focusip_Call_State)c1->state;
-    Cp(c2->state_text,        &c1->state_text);
-    c2->connect_duration    =  c1->connect_duration.sec;
-    c2->total_duration      =  c1->total_duration.sec;
-    c2->last_status         =  c1->last_status;
-    Cp(c2->last_status_text,  &c1->last_status_text);
-    c2->has_media           =  0;
-    c2->conf_slot           =  c1->conf_slot;
-}
-static void callinfo2CallInfo             (pjsua_call_info* c1,      Focusip_Call_Info *c2){
-    pj_memset(c2, 0, sizeof(Focusip_Call_Info));
-
-    pjsua_call_id callIndex =  c1->id;
-    
-    c2->index               =  callIndex;
-    c2->active              =  pjsua_call_is_active(callIndex);
-    c2->is_uac              = (c1->role == PJSIP_ROLE_UAC);
-    Cp(c2->local_info,        &c1->local_info);
-    Cp(c2->remote_info,       &c1->remote_info);
-    c2->state               = (Focusip_Call_State)c1->state;
-    Cp(c2->state_text,        &c1->state_text);
-    c2->connect_duration    =  c1->connect_duration.sec;
-    c2->total_duration      =  c1->total_duration.sec;
-    c2->last_status         =  c1->last_status;
-    Cp(c2->last_status_text,  &c1->last_status_text);
-    c2->has_media           =  pjsua_call_has_media(callIndex);
-    c2->conf_slot           =  c1->conf_slot;
-}
 // 08 邻席信息转换
 static void buddyinfo2BuddyInfo           (pjsua_buddy_info* Binfo1, Focusip_Buddy_Info *Binfo2);
 static void Defaultbuddyinfo2BuddyInfo    (pjsua_buddy_info* Binfo1, Focusip_Buddy_Info *Binfo2){
@@ -1553,187 +1514,199 @@ STDMETHODIMP CFocusSip::vid_win_resize(
 
 // 001 // (OK)
 STDMETHODIMP CFocusSip::aboutbox(
-        /* [retval][out] */                 Fs__Str                 *ret)
+        Fs__Str *ret)
 {
     // A1 初始化
     int status;
 
-    status = pj_init();            //初始化pjlib库返回PJ_SUCCESS表示成功
+    status = pj_init();         // 初始化pjlib库返回PJ_SUCCESS表示成功
     if(status){
     }
 
-    status = pjlib_util_init();    //初始化pjlib-util库
+    status = pjlib_util_init(); // 初始化pjlib-util库
     if(status){
     }
 
-    int     call_id             = PJSUA_INVALID_ID;
+    int     call_id     = PJSUA_INVALID_ID;
+    pjsua_call_info       call_info;
+    Focusip_Call_Info     Call_Info001;
+    Focusip_Call_Info     Call_Info003;
+    Focusip_Call_Info     Call_Info004;
+
+    Fs__Str  sCb100     = DefaultJsonTestString                         (call_id);
+    int      nCb100     = SysStringLen                                  (sCb100);
+    HRESULT  ret100     = CFocusSip_Instance->Fire_OnTestJsonString     (call_id, sCb100, nCb100);
+
+    int      ret001     = default_CallInfo                              (&Call_Info001);
+    HRESULT  Ret001     = CFocusSip_Instance->Fire_OnCallState          (call_id,    &Call_Info001);
 
 
-    Fs__Str bsCb0               = DefaultTestJsonString(call_id);
-    HRESULT resTestJsonString   = CFocusSip_Instance->Fire_OnTestJsonString(bsCb0);
+    Fs__Str  sCb101     = DefaultJsonSipEvent                           ();
+    int      nCb101     = SysStringLen                                  (sCb101);
+    HRESULT  Ret101     = CFocusSip_Instance->Fire_OnJsonCallState      (call_id, sCb101, nCb101);
 
-    Fs__Str bsCb2               = DefaultIncomingCall(call_id);
-    int      nCb2               = SysStringLen(bsCb2);
-    HRESULT resIncomingCall1    = CFocusSip_Instance->Fire_OnIncomingCall(call_id);
-    HRESULT resIncomingCall2    = CFocusSip_Instance->Fire_OnJsonIncomingCall(call_id, bsCb2, nCb2);
+    HRESULT  Ret002     = CFocusSip_Instance->Fire_OnIncomingCall       (call_id);
 
-    Fs__Str bsCb3               = DefaultCallState();
-    int      nCb3               = SysStringLen(bsCb3);
+    Fs__Str  sCb102     = DefaultJsonOnIncomingCallParam                (call_id);
+    int      nCb102     = SysStringLen                                  (sCb102);
+    HRESULT  ret102     = CFocusSip_Instance->Fire_OnJsonIncomingCall   (call_id, sCb102, nCb102);
+
+
+    int      ret003     = default_CallInfo                              (&Call_Info003);
+    HRESULT  Ret003     = CFocusSip_Instance->Fire_OnCallTsxState       (call_id,    &Call_Info003);
+
+    Fs__Str  sCb103     = DefaultJsonTsxState                           ();
+    int      nCb103     = SysStringLen                                  (sCb103);
+    HRESULT  Ret103     = CFocusSip_Instance->Fire_OnJsonTsxState       (call_id, sCb103, nCb103 );
+
+
+    int      ret004     = default_CallInfo                              (&Call_Info004);
+    HRESULT  Ret004     = CFocusSip_Instance->Fire_OnMediaState         (call_id,    &Call_Info004);
+
+    Fs__Str  sCb104     = DefaultJsonMediaStateParam                    ();
+    int      nCb104     = SysStringLen                                  (sCb104);
+    HRESULT  Ret104     = CFocusSip_Instance->Fire_OnJsonMediaState     (call_id, sCb104, nCb104 );
+
 
     /*
+        HRESULT result=0;
 
-    pjsua_call_info call_info;
-    pjsua_call_get_info(call_id, &call_info);
+        result = CFocusSip_Instance->Fire_OnAboutBox                ( 1, 2 );          // FLOAT\FLOAT
 
-    // App Actions
-    Focusip_Call_Info *pCall_Info = new Focusip_Call_Info;
-    callinfo2CallInfo(&call_info, pCall_Info);
-    // 假如hangup, 把本地摄像头视频也关掉
-    // ABChernic : 暂时有问题?
-    CFocusSip_Instance->Fire_OnCallState(call_id, pCall_Info);
+        pjsua_reg_info rinfo;
+        Focusip_Reg_Info *pReg_Info = new Focusip_Reg_Info;
+        reginfo2RegInfo(&rinfo, pReg_Info);
+        result = CFocusSip_Instance->Fire_OnRegState                ( 2, pReg_Info);   // INT\Focusip_Reg_Info
 
-    */
+        pjsua_call_info call_info;
+        pj_bzero(&call_info, sizeof(call_info));   /// 很重要
 
-    //Call *call = Call::lookup(call_id);
-    //if (!call) {
-    //    return -1;
-    //}
+        Focusip_Call_Info *pCall_Info = new Focusip_Call_Info;
+        Defaultcallinfo2CallInfo(&call_info, pCall_Info);
+        //callinfo2CallInfo(&call_info, pCall_Info);
+        result = CFocusSip_Instance->Fire_OnCallState               ( 3, pCall_Info ); // INT\Focusip_Call_Info
 
+        pjsua_buddy_info buddy_info;
+        pj_bzero(&buddy_info, sizeof(buddy_info)); /// 很重要
 
-    /*    
-    HRESULT result=0;
+        Focusip_Buddy_Info *pBuddy_Info = new Focusip_Buddy_Info;
+        Defaultbuddyinfo2BuddyInfo(&buddy_info, pBuddy_Info);
+        //buddyinfo2BuddyInfo(&buddy_info, pBuddy_Info);
+        result = CFocusSip_Instance->Fire_OnBuddyState              ( 4, pBuddy_Info); // INT\Focusip_Buddy_Info
 
-    result = CFocusSip_Instance->Fire_OnAboutBox                ( 1, 2 );          // FLOAT\FLOAT
+        BSTR fromUri   = str2bstr("fromUri", 7);
+        BSTR toURI     = str2bstr("toURI", 5);
+        BSTR pagerText = str2bstr("pagerText", 9);
+        result = CFocusSip_Instance->Fire_OnIncomingPager           ( 5, fromUri, toURI, pagerText);// INT\BSTR\BSTR\BSTR
 
-    pjsua_reg_info rinfo;
-    Focusip_Reg_Info *pReg_Info = new Focusip_Reg_Info;
-    reginfo2RegInfo(&rinfo, pReg_Info);
-    result = CFocusSip_Instance->Fire_OnRegState                ( 2, pReg_Info);   // INT\Focusip_Reg_Info
-
-    pjsua_call_info call_info;
-    pj_bzero(&call_info, sizeof(call_info));   /// 很重要
-
-    Focusip_Call_Info *pCall_Info = new Focusip_Call_Info;
-    Defaultcallinfo2CallInfo(&call_info, pCall_Info);
-    //callinfo2CallInfo(&call_info, pCall_Info);
-    result = CFocusSip_Instance->Fire_OnCallState               ( 3, pCall_Info ); // INT\Focusip_Call_Info
-
-    pjsua_buddy_info buddy_info;
-    pj_bzero(&buddy_info, sizeof(buddy_info)); /// 很重要
-
-    Focusip_Buddy_Info *pBuddy_Info = new Focusip_Buddy_Info;
-    Defaultbuddyinfo2BuddyInfo(&buddy_info, pBuddy_Info);
-    //buddyinfo2BuddyInfo(&buddy_info, pBuddy_Info);
-    result = CFocusSip_Instance->Fire_OnBuddyState              ( 4, pBuddy_Info); // INT\Focusip_Buddy_Info
-
-    BSTR fromUri   = str2bstr("fromUri", 7);
-    BSTR toURI     = str2bstr("toURI", 5);
-    BSTR pagerText = str2bstr("pagerText", 9);
-    result = CFocusSip_Instance->Fire_OnIncomingPager           ( 5, fromUri, toURI, pagerText);// INT\BSTR\BSTR\BSTR
-
-    result = CFocusSip_Instance->Fire_OnIncomingCall            ( 6 );             // INT
-    (
-
+        result = CFocusSip_Instance->Fire_OnIncomingCall            ( 6 );             // INT
     */
 
     return S_OK;
 }
-/////////////////////////////////////////////////////////////////////////////
-// Callback Callback Callback Callback Callback Callback Callback Callback
-/////////////////////////////////////////////////////////////////////////////
-static void on_call_state(                          // FocusSip : Callback 01 pjsua.h
-        pjsua_call_id call_id,
-        pjsip_event   *e)
-{
-    pjsua_call_info call_info;
-    pjsua_call_get_info(call_id, &call_info);
-
-    // App Actions
-    Focusip_Call_Info *pCall_Info = new Focusip_Call_Info;
-    callinfo2CallInfo(&call_info, pCall_Info);
+/// FocusSip : Callback 01 pjsua.h
+static void on_call_state(pjsua_call_id call_id, pjsip_event *e){
     // ABChernic : 暂时有问题: 假如hangup, 把本地摄像头视频也关掉
-    CFocusSip_Instance->Fire_OnCallState(call_id, pCall_Info);
+    pjsua_call_info           ci;
+    pj_status_t status      = pjsua_call_get_info                           (call_id, &ci);
+    
+    Focusip_Call_Info*pCI   = new Focusip_Call_Info;
 
-    /* If the state is DISCONNECTED, call may have already been deleted
-     * by the application in the callback, so do not access it anymore here.
-     */
+    int         ret001      = call_info2CallInfo                            (         &ci, pCI );
+    HRESULT     Ret001      = CFocusSip_Instance->Fire_OnCallState          (call_id,      pCI );
+
+    Fs__Str     sCb101      = pjsip_event2JsonSipEvent                      (e);
+    int         nCb101      = SysStringLen                                  (sCb101);
+    HRESULT     Ret101      = CFocusSip_Instance->Fire_OnJsonCallState      (call_id, sCb101, nCb101);
 }
-//
-static void on_incoming_call(                       // FocusSip : Callback 02 pjsua.h
-        pjsua_acc_id acc_id,
-        pjsua_call_id call_id,
-        pjsip_rx_data *rdata)
-{
-/*
-    JsonOnIncomingCallParam prm;
-    JsonDocument    jDoc;
-    string          Cbstring;
-    Fs__Str         CallBackStr;
+/// FocusSip : Callback 02 pjsua.h
+static void on_incoming_call(pjsua_acc_id acc_id, pjsua_call_id call_id, pjsip_rx_data *rdata){
 
-    prm.fromPj(call_id, *rdata);
-*/
-	/*
-    jDoc.writeObject(prm);
-    jDoc.saveFile("JsonOnIncomingCallParam.js");
-    Cbstring    = jDoc.saveString();
-    CallBackStr = str2bstr( Cbstring.data(), Cbstring.size());
+//{ callback: incoming_call
+    HRESULT     Ret002      = CFocusSip_Instance->Fire_OnIncomingCall       (call_id);
 
-    CFocusSip_Instance->Fire_OnIncomingCall(call_id);
-    CFocusSip_Instance->Fire_OnJsonIncomingCall(call_id, CallBackStr, Cbstring.size());
-	*/
+    Fs__Str     sCb102      = DefaultJsonOnIncomingCallParam                (call_id);
+    int         nCb102      = SysStringLen                                  (sCb102);
+    HRESULT     ret102      = CFocusSip_Instance->Fire_OnJsonIncomingCall   (call_id, sCb102, nCb102);
+//}
 
-
-	Fs__Str bsCb2               = DefaultIncomingCall(call_id);
-    int      nCb2               = SysStringLen(bsCb2);
-    HRESULT resIncomingCall1    = CFocusSip_Instance->Fire_OnIncomingCall(call_id);
-    HRESULT resIncomingCall2    = CFocusSip_Instance->Fire_OnJsonIncomingCall(call_id, bsCb2, nCb2);
-
-
-    ////////////////////////////////////////////////////
-    /* disconnect if callback doesn't handle the call */
+//{ Chernic 20180510-1200 : [callback inner operations]
+    // Disconnect if callback doesn't handle the call
     pjsua_call_info ci;
     pjsua_call_get_info(call_id, &ci);
-    if (!pjsua_call_get_user_data(call_id) && ci.state != PJSIP_INV_STATE_DISCONNECTED){
+    if (!pjsua_call_get_user_data(call_id) &&
+    ci.state != PJSIP_INV_STATE_DISCONNECTED){
         pjsua_call_hangup(call_id, PJSIP_SC_INTERNAL_SERVER_ERROR, NULL, NULL);
     }
-	////////////////////////////////////////////////////
-}
-//
-static void on_call_tsx_state(                      // FocusSip : Callback 03 pjsua.h
-        pjsua_call_id call_id,
-        pjsip_transaction *tsx,
-        pjsip_event *e){
-}
-//
-static void on_call_media_state(                    // FocusSip : Callback 04 pjsua.h
-        /* [in] */  pjsua_call_id   callIndex)
-{
+//} Chernic: Over
 
+}
+/// FocusSip : Callback 03 pjsua.h
+static void on_call_tsx_state(pjsua_call_id call_id, pjsip_transaction *tsx, pjsip_event *e){
+//{ callback: call_tsx_state
+    PJ_UNUSED_ARG(tsx);
+
+    pjsua_call_info           ci;
+    Focusip_Call_Info *pCI  = new Focusip_Call_Info;
+    pj_status_t status      = pjsua_call_get_info                           (call_id, &ci);
+    int         ret003      = call_info2CallInfo                            (         &ci, pCI );
+    HRESULT     Ret003      = CFocusSip_Instance->Fire_OnCallTsxState       (call_id,      pCI );
+
+    Fs__Str     sCb103      = pjsip_event2JsonSipEvent                      (e);
+    int         nCb103      = SysStringLen                                  (sCb103);
+    HRESULT     Ret103      = CFocusSip_Instance->Fire_OnJsonTsxState       (call_id, sCb103, nCb103);
+//}
+
+}
+/// FocusSip : Callback 04 pjsua.h
+
+/* mainDlg.cpp
+static void on_call_media_state(pjsua_call_id call_id)
+{
     pjsua_call_info *call_info = new pjsua_call_info();
+    if (pjsua_call_get_info(call_id, call_info) != PJ_SUCCESS || call_info->state == PJSIP_INV_STATE_NULL) {
+        return;
+    }
+    if (call_info->media_status == PJSUA_CALL_MEDIA_ACTIVE
+        || call_info->media_status == PJSUA_CALL_MEDIA_REMOTE_HOLD
+        ) {
+            msip_conference_join(call_info);
+            pjsua_conf_connect(call_info->conf_slot, 0);
+            pjsua_conf_connect(0, call_info->conf_slot);
+            //--
+            ::SetTimer(mainDlg->pageDialer->m_hWnd,IDT_TIMER_VU_METER,100,NULL);
+            //--
+    } else {
+        msip_conference_leave(call_info, true);
+        pjsua_conf_disconnect(call_info->conf_slot, 0);
+        pjsua_conf_disconnect(0, call_info->conf_slot);
+        call_deinit_tonegen(call_id);
+        //--
+    }
+    PostMessage(mainDlg->m_hWnd, UM_ON_CALL_MEDIA_STATE, (WPARAM) call_info, 0);
+}
+*/
+
+
+static void on_call_media_state(pjsua_call_id callIndex){
+
+    pjsua_call_info call_info;
 
     if (pjsua_call_get_info(callIndex, call_info) != PJ_SUCCESS || call_info->state == PJSIP_INV_STATE_NULL) {
         return;
     }
 
-    //#ifdef _GLOBAL_VIDEO
     MakeStreamWindow( );
-
     ShowPreviwWindow( PJ_TRUE );
     ShowStreamWindow( PJ_TRUE );
-    //#endif
 }
-//
-static void on_stream_created(                      // FocusSip : Callback 06 pjsua.h XXXXXXXXXXXXXXXXX
-        pjsua_call_id call_id,
-        pjmedia_stream *strm,
-        unsigned stream_idx,
-        pjmedia_port **p_port)
-{
+/// FocusSip : Callback 06 pjsua.h XXXXXXXXXXXXXXXXX
+static void on_stream_created(pjsua_call_id call_id,pjmedia_stream *strm,unsigned stream_idx,pjmedia_port **p_port){
     int callback = 6;
     (void * ) call_id;
 }
-//
-static void on_stream_created2(                     // FocusSip : Callback 07 pjsua.h XXXXXXXXXXXXXXXXX
+/// FocusSip : Callback 07 pjsua.h XXXXXXXXXXXXXXXXX
+static void on_stream_created2(                     
         pjsua_call_id call_id,
         pjsua_on_stream_created_param *param)
 {
@@ -1742,7 +1715,7 @@ static void on_stream_created2(                     // FocusSip : Callback 07 pj
     (void * ) call_id;
 }
 //
-static void on_stream_destroyed(                    // FocusSip : Callback 08 pjsua.h XXXXXXXXXXXXXXXXX
+static void on_stream_destroyed(                    /// FocusSip : Callback 08 pjsua.h XXXXXXXXXXXXXXXXX
         pjsua_call_id call_id,
         pjmedia_stream *strm,
         unsigned stream_idx)
@@ -1752,7 +1725,7 @@ static void on_stream_destroyed(                    // FocusSip : Callback 08 pj
 }
 //
 static void on_dtmf_digit(
-        pjsua_call_id call_id, int digit)           // FocusSip : Callback 09 pjsua.h
+        pjsua_call_id call_id, int digit)           /// FocusSip : Callback 09 pjsua.h
 {
     //char signal[2];
     //signal[0] = digit;
@@ -1760,7 +1733,7 @@ static void on_dtmf_digit(
     //call_play_digit(-1, signal);
 }
 //
-static void on_call_transfer_request2(              // FocusSip : Callback 11 pjsua.h
+static void on_call_transfer_request2(              /// FocusSip : Callback 11 pjsua.h
         pjsua_call_id call_id,
         const pj_str_t *dst,
         pjsip_status_code *code,
@@ -1807,7 +1780,7 @@ static void on_call_transfer_request2(              // FocusSip : Callback 11 pj
     // }
 }
 //
-static void on_call_transfer_status(                // FocusSip : Callback 12 pjsua.h
+static void on_call_transfer_status(                /// FocusSip : Callback 12 pjsua.h
         pjsua_call_id call_id,
         int status_code,
         const pj_str_t *status_text,
@@ -1816,7 +1789,7 @@ static void on_call_transfer_status(                // FocusSip : Callback 12 pj
 {
 }
 //
-static void on_call_replace_request2(               // FocusSip : Callback 14 pjsua.h
+static void on_call_replace_request2(               /// FocusSip : Callback 14 pjsua.h
         pjsua_call_id call_id,
         pjsip_rx_data *rdata,
         int *st_code, pj_str_t *st_text,
@@ -1832,13 +1805,13 @@ static void on_call_replace_request2(               // FocusSip : Callback 14 pj
     }
 }
 //
-static void on_call_replaced(                       // FocusSip : Callback 15 pjsua.h
+static void on_call_replaced(                       /// FocusSip : Callback 15 pjsua.h
         pjsua_call_id old_call_id,
         pjsua_call_id new_call_id)
 {
 }
 //
-static void on_reg_state2(                          // FocusSip : Callback 21 pjsua.h
+static void on_reg_state2(                          /// FocusSip : Callback 21 pjsua.h
         pjsua_acc_id acc_id,
         pjsua_reg_info *info)
 {
@@ -1854,7 +1827,7 @@ static void on_reg_state2(                          // FocusSip : Callback 21 pj
     return;
 }
 //
-static void on_buddy_state(                         // FocusSip : Callback 24 pjsua.h
+static void on_buddy_state(                         /// FocusSip : Callback 24 pjsua.h
         pjsua_buddy_id buddy_id)
 {
     pjsua_buddy_info buddy_info;
@@ -1912,7 +1885,7 @@ static void on_buddy_state(                         // FocusSip : Callback 24 pj
 
 }
 //
-static void on_pager2(                              // FocusSip : Callback 27 pjsua.h
+static void on_pager2(                              /// FocusSip : Callback 27 pjsua.h
         pjsua_call_id call_id,
         const pj_str_t *from,
         const pj_str_t *to,
@@ -1946,7 +1919,7 @@ static void on_pager2(                              // FocusSip : Callback 27 pj
     // }
 }
 //
-static void on_pager_status2(                       // FocusSip : Callback 29 pjsua.h
+static void on_pager_status2(                       /// FocusSip : Callback 29 pjsua.h
         pjsua_call_id call_id,
         const pj_str_t *to,
         const pj_str_t *body,
@@ -1983,10 +1956,10 @@ static void on_pager_status2(                       // FocusSip : Callback 29 pj
     // }
 }
 //
-static void on_nat_detect(                          // FocusSip : Callback 32 pjsua.h
+static void on_nat_detect(                          /// FocusSip : Callback 32 pjsua.h
         const pj_stun_nat_detect_result *res){
 }
 //
-static void on_mwi_info(                            // FocusSip : Callback 34 pjsua.h
+static void on_mwi_info(                            /// FocusSip : Callback 34 pjsua.h
         pjsua_acc_id acc_id, pjsua_mwi_info *mwi_info){
 }
