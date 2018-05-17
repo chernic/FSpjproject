@@ -2,18 +2,65 @@
 /* 
  * Copyright (C) 2018 FOCUSTAR Inc. (http://www.focustar.net)
  */
-#include <pjsua2/account.hpp>
-#include <pjsua2/endpoint.hpp>
-#include <pjsua2/presence.hpp>
+ 
+//{ PJSIP_EVENT_XXX
+// PJSIP_EVENT_UNKNOWN,             // 0
+// PJSIP_EVENT_TIMER,               // 1
+// PJSIP_EVENT_TX_MSG,              // 2
+// PJSIP_EVENT_RX_MSG,              // 3
+// PJSIP_EVENT_TRANSPORT_ERROR,     // 4
+// PJSIP_EVENT_TSX_STATE,           // 5
+// PJSIP_EVENT_USER                 // 6
+
+// PJSIP_TSX_STATE_NULL,            // 0 /**< For UAC, before any message is sent.       */
+// PJSIP_TSX_STATE_CALLING,         // 1 /**< For UAC, just after request is sent.       */
+// PJSIP_TSX_STATE_TRYING,          // 2 /**< For UAS, just after request is received.   */
+// PJSIP_TSX_STATE_PROCEEDING,      // 3 /**< For UAS/UAC, after provisional response.  */
+// PJSIP_TSX_STATE_COMPLETED,       // 4 /**< For UAS/UAC, after final response.         */
+// PJSIP_TSX_STATE_CONFIRMED,       // 5 /**< For UAS, after ACK is received.            */
+// PJSIP_TSX_STATE_TERMINATED,      // 6 /**< For UAS/UAC, before it's destroyed.        */
+// PJSIP_TSX_STATE_DESTROYED,       // 7 /**< For UAS/UAC, will be destroyed now.        */
+// PJSIP_TSX_STATE_MAX              // 9 /**< Number of states.                          */
+ //}
+
+//{ PJSIP_EVENT_INIT_XXX
+// #define PJSIP_EVENT_INIT_TIMER(event,pentry)                     
+// #define PJSIP_EVENT_INIT_TSX_STATE(event,ptsx,ptype,pdata,prev)  
+// #define PJSIP_EVENT_INIT_TX_MSG(event,ptdata)                    
+// #define PJSIP_EVENT_INIT_RX_MSG(event,prdata)                    
+// #define PJSIP_EVENT_INIT_TRANSPORT_ERROR(event,ptsx,ptdata)      
+// #define PJSIP_EVENT_INIT_USER(event,u1,u2,u3,u4)                 
+//}
+
+//{ struct pjsip_xxxx
+// Line 281:  struct pjsip_rx_data
+// Line 508:  struct pjsip_tx_data
+// Line 776:  struct pjsip_transport
+// Line 1001: struct pjsip_tpfactory
+//}
+
+//{ XXXEvent
+// TimerEvent      timer;           1               ( TimerEntry
+// TxMsgEvent      txMsg;           2               ( SipTxData       SipTransaction
+// RxMsgEvent      rxMsg;           3               ( SipRxData
+// TxErrorEvent    txError;         4               ( SipTxData       SipTransaction
+// TsxStateEvent   tsxState;        5               ( TsxStateEventSrc
+// UserEvent       user;            6               ( GenericData
+//}
+
 #include <pjsua2/focusua.hpp>
-#include <pj/ctype.h>
+#include <pjsua2/account.hpp>
+#include <pjsua2/call.hpp>
+#include <pjsua2/presence.hpp>
+#include <pjsua-lib/pjsua_internal.h>
+#include <algorithm>
 #include "util.hpp"
 
 using namespace pj;
 using namespace std;
+#define THIS_FILE "DefaultValue.cpp"
 
-#define THIS_FILE   "focusua.cpp"
-// 
+//
 void JsonAccountInfo            ::fromPj(const pjsua_acc_info &pai){
     id                  = pai.id;
     isDefault           = pai.is_default != 0;
@@ -43,7 +90,20 @@ void JsonAccountInfo            ::writeObject(ContainerNode &node) const throw(E
     NODE_WRITE_BOOL     ( this_node, onlineStatus);
     NODE_WRITE_STRING   ( this_node, onlineStatusText);
 }
-//
+// Base Json Struct
+void JsonMediaStream            ::fromPj(pjmedia_stream &stream){
+    /*pjmedia_stream 不能使用 PJ_UNUSED_ARG()*/
+}
+void JsonMediaStream            ::writeObject(ContainerNode &node) const throw(Error){
+    PJ_UNUSED_ARG( node );
+}
+void JsonMediaPort              ::fromPj(pjmedia_port &port){
+}
+void JsonMediaPort              ::writeObject(ContainerNode &node) const throw(Error){
+    PJ_UNUSED_ARG( node );
+}
+/////////////////////////////// Json Callback Param
+// 102 on_incoming_call
 void JsonOnIncomingCallParam    ::fromPj(int call_id, pjsip_rx_data &rdata){
     char straddr[PJ_INET6_ADDRSTRLEN+10];
     
@@ -71,8 +131,78 @@ void JsonOnIncomingCallParam    ::writeObject(ContainerNode &node) const throw(E
     NODE_WRITE_STRING   ( this_node, wholeMsg);
     NODE_WRITE_STRING   ( this_node, srcAddress);
 }
-///////////////////////////////// 000000
+// 104 on_call_media_state
+void JsonOnMediaStateParam      ::fromPj(void){
+    // Info = string("none");
+}
+void JsonOnMediaStateParam      ::writeObject(ContainerNode &node) const throw(Error){
+    ContainerNode this_node = node.writeNewContainer("JsonOnMediaStateParam");
+    
+    NODE_WRITE_STRING   ( this_node, Info);
+}
+// 107 on_stream_created2
+void JsonOnStreamCreatedParam   ::fromPj(int call_id, pjsua_on_stream_created_param &param){
+    CallId = call_id;
+    Stream.fromPj(*param.stream);       // stream   = param->stream;
+    StreamIdx   = param.stream_idx;
+    DestroyPort = param.destroy_port;
+    Port.fromPj(*param.port);           // pPort    = (MediaPort)param->port;
+
+    // param->destroy_port = prm.destroyPort;
+    // param->port = (pjmedia_port *)prm.pPort;
+}
+void JsonOnStreamCreatedParam   ::writeObject(ContainerNode &node) const throw(Error){
+    ContainerNode this_node = node.writeNewContainer("JsonOnStreamCreatedParam");
+
+    NODE_WRITE_INT      ( this_node, CallId);
+    NODE_WRITE_INT      ( this_node, StreamIdx);
+    NODE_WRITE_INT      ( this_node, DestroyPort);
+    NODE_WRITE_OBJ      ( this_node, Stream);
+    NODE_WRITE_OBJ      ( this_node, Port);
+}
+// 108 on_stream_destroyed
+void JsonOnStreamDestroyedParam ::fromPj(int call_id, pjsua_on_stream_destroyed_param &param){
+    CallId = call_id;
+    Stream.fromPj(*param.stream);         // stream   = param->stream;
+    StreamIdx   = param.stream_idx;
+    //DestroyPort = param.destroy_port;
+    //Port.fromPj(*param.port);           // pPort    = (MediaPort)param->port;
+}
+void JsonOnStreamDestroyedParam ::writeObject(ContainerNode &node) const throw(Error){
+    ContainerNode this_node = node.writeNewContainer("JsonOnStreamDestroyedParam");
+
+    NODE_WRITE_INT      ( this_node, CallId);
+    NODE_WRITE_INT      ( this_node, StreamIdx);
+    //NODE_WRITE_INT      ( this_node, DestroyPort);
+    NODE_WRITE_OBJ      ( this_node, Stream);
+    //NODE_WRITE_OBJ      ( this_node, Port);
+
+}
+// 109  on_dtmf_digit
+void JsonOnDtmfDigitParam       ::fromPj(int call_id, pjsua_on_dtmf_digit_param &param){
+    CallId = call_id;
+    Digit  = param.digit;
+}
+void JsonOnDtmfDigitParam       ::writeObject(ContainerNode &node) const throw(Error){
+    ContainerNode this_node = node.writeNewContainer("JsonOnDtmfDigitParam");
+    
+    NODE_WRITE_INT      ( this_node, CallId);
+    NODE_WRITE_STRING   ( this_node, Digit);
+}
+// 109  on_call_transfer_request2
+void JsonOnTransferRequest2Param::fromPj(int call_id, pjsua_on_call_transfer_request2_param &param){
+    CallId = call_id;
+}
+void JsonOnTransferRequest2Param::writeObject(ContainerNode &node) const throw(Error){
+    ContainerNode this_node = node.writeNewContainer("JsonOnTransferRequest2Param");
+
+    NODE_WRITE_INT      ( this_node, CallId);
+}
+
+
+/////////////////////////////////
 // basic struct
+/////////////////////////////////
 void Json_SipTxData             ::fromPj(pjsip_tx_data      &tdata){
     char straddr[PJ_INET6_ADDRSTRLEN+10];
     
@@ -154,6 +284,8 @@ void Json_TimerEntry            ::fromPj(pj_timer_entry     &entry){// Start wit
 }
 void Json_TimerEntry            ::writeObject(ContainerNode &node) const throw(Error){
     ContainerNode this_node = node.writeNewContainer("Json_TimerEntry");
+
+	(void) this_node;
 }
 // complex struct
 ///////////////////////////////// 111111
@@ -271,4 +403,3 @@ void Json_SipEvent              ::writeObject(ContainerNode &node) const throw(E
     //NODE_WRITE_OBJ    ( this_node, pjEvent);                      // void *pjEvent;
     PJ_UNUSED_ARG       ( node );
 }
-///////////////////////////////// zzzzzz

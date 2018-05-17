@@ -1,4 +1,8 @@
-// DefaultValue.h : CFocusSip 的声明
+/* $Id: focusua.hpp 5676 2018-04-18 15:19:22Z chernic $ */
+/* 
+ * Copyright (C) 2018 FOCUSTAR Inc. (http://www.focustar.net)
+ */
+
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
 #endif
@@ -10,27 +14,15 @@
 #include "focusua_common.h"
 #include "focusua_structs.h"
 
-/*
-$(SolutionDir)$(ConfigurationName)\$(ProjectName)
-$(SolutionDir)Deploy\i386-$(PlatformName)-vc8-$(ConfigurationName)\$(ProjectName).ocx
+//#########################################################
+#include "pjsua2/focusua.hpp"
+//#########################################################
 
-/////////////////////////////////////////////////
-命令:
-// C:\Program Files\Internet Explorer\iexplore.exe
-命令参数:
-// $(SolutionDir)Deploy\FocusSipAtl.html
-工作目录
-// $(SolutionDir)Deploy\i386-Win32-vc8-Debug\
-
-//////////////////////////////////////////////////
-命令:
-$(SolutionDir)Deploy\i386-Win32-vc8-Debug\FocusSipAtlmain.exe
-工作目录:
-$(SolutionDir)Deploy\i386-Win32-vc8-Debug\
-*/
+using namespace std;
 
 ///////////////////////////////////////////
-/** string methods **/
+// String methods
+///////////////////////////////////////////
 #define Cp(d,s) Cp2(&d,s)
 BSTR str2bstr(const char *str, unsigned len);
 static pj_str_t Pj_str(pj_pool_t *pool, Fs__Str s){
@@ -55,7 +47,9 @@ static void Cp2(BSTR *dst, const pj_str_t *src){
 }
 
 ///////////////////////////////////////////
-static int call_info2CallInfo           (pjsua_call_info* c1, Focusip_Call_Info *c2){
+// Chernic: Default values only for test
+///////////////////////////////////////////
+static int call_info2CallInfo                       (pjsua_call_info* c1, Focusip_Call_Info *c2){
     pj_memset(c2, 0, sizeof(Focusip_Call_Info));
 
     pjsua_call_id callIndex =  c1->id;
@@ -75,26 +69,47 @@ static int call_info2CallInfo           (pjsua_call_info* c1, Focusip_Call_Info 
     c2->conf_slot           =  c1->conf_slot;
     return 0;
 }
-///////////////////////////////////////////
-// Common values settings
-void    default_rx_data ( pjsip_rx_data * rdata);
-void    default_tx_data ( pjsip_tx_data * rdata);
-int     default_CallInfo( Focusip_Call_Info *c2);
+void    default_rx_data                             (pjsip_rx_data * rdata);
+void    default_tx_data                             (pjsip_tx_data * rdata);
+int     default_CallInfo                            (Focusip_Call_Info *c2);
+void    default_stream_created_param                (pjsua_on_stream_created_param   *param);
+void    default_stream_destroyed_param              (pjsua_on_stream_destroyed_param *param);
+void    default_dtmf_digit_param                    (pjsua_on_dtmf_digit_param       *param);
 
 ///////////////////////////////////////////
-Fs__Str pjsip_event2JsonSipEvent       (pjsip_event *e);
-// 000 Common
-Fs__Str DefaultJsonSipEvent            (void);
-Fs__Str DefaultJsonMediaStateParam     (void);
+// Chernic: Default JSON values only for test
+///////////////////////////////////////////
+Fs__Str default_json_sip_event                      (string sFilDir);
+Fs__Str default_json_media_state                    (string sFilDir);
+///////////////////////////////////////////
 // 100 TestString
-Fs__Str DefaultJsonTestString           (int call_id);
-// 101 CallState
-Fs__Str DefaultJsonCallState            (void);
-// 102 IncomingCall
-Fs__Str DefaultJsonOnIncomingCallParam  (int call_id);
-// 103 TsxState
-Fs__Str DefaultJsonTsxState             (void);
-// 103 MediaState
-Fs__Str DefaultJsonMediaState           (void);
+Fs__Str DefaultJsonTestStringParam                  (string sFilDir, int call_id);
+// 101 on_call_state
+Fs__Str DefaultJsonCallStateParam                   (string sFilDir);
+// 102 on_incoming_call
+Fs__Str DefaultJsonOnIncomingCallParam              (string sFilDir, int call_id);
+// 103 on_call_tsx_state
+Fs__Str DefaultJsonTsxStateParam                    (string sFilDir);
+// 104 on_call_media_state
+Fs__Str DefaultJsonMediaStateParam                  (string sFilDir);
+// 107 on_stream_created2
+Fs__Str DefaultJsonOnStreamCreatedParam             (string sFilDir, int call_id);
+// 108 on_stream_destroyed
+Fs__Str DefaultJsonOnStreamDestroyedParam           (string sFilDir, int call_id);
+// 109 on_dtmf_digit
+Fs__Str DefaultJsonOnDtmfDigitParam                 (string sFilDir, int call_id);
 
-
+///////////////////////////////////////////
+// Chernic: Json form callback function 's param 
+///////////////////////////////////////////
+// 101 on_call_state
+// 103 on_call_tsx_state
+Fs__Str JsonStrFrom_pjsip_event                     (int call_id, pjsip_event *e);
+// 102 on_incoming_call
+Fs__Str JsonStrFrom_pjsip_rx_data                   (int call_id, pjsip_rx_data *rdata);
+// 107 on_stream_created2
+Fs__Str JsonStrFrom_pjsua_on_stream_created_param   (int call_id, pjsua_on_stream_created_param   &param);
+// 108 on_stream_destroyed
+Fs__Str JsonStrFrom_pjsua_on_stream_destroyed_param (int call_id, pjsua_on_stream_destroyed_param &param);
+// 109 on_dtmf_digit
+Fs__Str JsonStrFrom_pjsua_on_dtmf_digit_param       (int call_id, pjsua_on_dtmf_digit_param       &param);

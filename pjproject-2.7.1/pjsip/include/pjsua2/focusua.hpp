@@ -3,68 +3,41 @@
  * Copyright (C) 2018 FOCUSTAR Inc. (http://www.focustar.net)
  */
 
-// PJSIP_EVENT_UNKNOWN,             // 0
-// PJSIP_EVENT_TIMER,               // 1
-// PJSIP_EVENT_TX_MSG,              // 2
-// PJSIP_EVENT_RX_MSG,              // 3
-// PJSIP_EVENT_TRANSPORT_ERROR,     // 4
-// PJSIP_EVENT_TSX_STATE,           // 5
-// PJSIP_EVENT_USER                 // 6
-
-// PJSIP_TSX_STATE_NULL,            // 0 /**< For UAC, before any message is sent.       */
-// PJSIP_TSX_STATE_CALLING,         // 1 /**< For UAC, just after request is sent.       */
-// PJSIP_TSX_STATE_TRYING,          // 2 /**< For UAS, just after request is received.   */
-// PJSIP_TSX_STATE_PROCEEDING,      // 3 /**< For UAS/UAC, after provisional response.  */
-// PJSIP_TSX_STATE_COMPLETED,       // 4 /**< For UAS/UAC, after final response.         */
-// PJSIP_TSX_STATE_CONFIRMED,       // 5 /**< For UAS, after ACK is received.            */
-// PJSIP_TSX_STATE_TERMINATED,      // 6 /**< For UAS/UAC, before it's destroyed.        */
-// PJSIP_TSX_STATE_DESTROYED,       // 7 /**< For UAS/UAC, will be destroyed now.        */
-// PJSIP_TSX_STATE_MAX              // 9 /**< Number of states.                          */
-
-//{
-// #define PJSIP_EVENT_INIT_TIMER(event,pentry)                     
-// #define PJSIP_EVENT_INIT_TSX_STATE(event,ptsx,ptype,pdata,prev)  
-// #define PJSIP_EVENT_INIT_TX_MSG(event,ptdata)                    
-// #define PJSIP_EVENT_INIT_RX_MSG(event,prdata)                    
-// #define PJSIP_EVENT_INIT_TRANSPORT_ERROR(event,ptsx,ptdata)      
-// #define PJSIP_EVENT_INIT_USER(event,u1,u2,u3,u4)                 
-//}
-
-// Line 281:  struct pjsip_rx_data
-// Line 508:  struct pjsip_tx_data
-// Line 776:  struct pjsip_transport
-// Line 1001: struct pjsip_tpfactory
-
-// TimerEvent      timer;           1               ( TimerEntry
-// TxMsgEvent      txMsg;           2               ( SipTxData       SipTransaction
-// RxMsgEvent      rxMsg;           3               ( SipRxData
-// TxErrorEvent    txError;         4               ( SipTxData       SipTransaction
-// TsxStateEvent   tsxState;        5               ( TsxStateEventSrc
-// UserEvent       user;            6               ( GenericData
-
 #ifndef __PJSUA2_FOCUSUA_HPP__
 #define __PJSUA2_FOCUSUA_HPP__
 
-/**
- * @file pjsua2/focusua.hpp
- * @brief PJSUA2 focusua operations
- */
-#include <pjsua-lib/pjsua.h>
 #include <pjsua2/persistent.hpp>
-#include <pjsua2/presence.hpp>
+#include <pjsua2/media.hpp>
 #include <pjsua2/siptypes.hpp>
-#include <pjsua2/call.hpp>
+#include <list>
+#include <map>
+using std::string;
+
+typedef struct pjsua_on_stream_destroyed_param{
+    // int                  CallId;
+
+    pjmedia_stream      *stream;
+    unsigned            stream_idx;
+    // pj_bool_t        destroy_port;
+    // pjmedia_port    *port;
+} pjsua_on_stream_destroyed_param;
+
+typedef struct pjsua_on_dtmf_digit_param{
+    string digit;
+} pjsua_on_dtmf_digit_param;
+
+typedef struct pjsua_on_call_transfer_request2_param{
+    string digit;
+} pjsua_on_call_transfer_request2_param;
+
 
 /** PJSUA2 API is inside pj namespace */
 namespace pj{
-
 /**
  * @defgroup PJSUA2_ACC Focusua
  * @ingroup PJSUA2_Ref
  * @{
  */
- 
-using std::string;
 struct JsonOnExample:               public PersistentObject{
     int nExample;
 public:
@@ -88,28 +61,166 @@ public:
      */
     void fromPj                     (int call_id, pjsip_rx_data &rdata);
 };
-struct JsonAccountInfo :            public AccountInfo, 
-                                    public PersistentObject{
+struct JsonAccountInfo :            public PersistentObject{
+    pjsua_acc_id    id;
+    bool                isDefault;
+    string              uri;
+    bool                regIsConfigured;
+    bool                regIsActive;
+    int                 regExpiresSec;
+    pjsip_status_code   regStatus;
+    string              regStatusText;
+    pj_status_t             regLastErr;
+    bool                onlineStatus;
+    string              onlineStatusText;
 public:
     virtual void writeObject(ContainerNode &node) const throw(Error);
     void readObject(const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("JsonAccountInfo");
-
-        NODE_READ_INT           ( this_node, id);
-        NODE_READ_BOOL          ( this_node, isDefault);
-        NODE_READ_STRING        ( this_node, uri);
-        NODE_READ_BOOL          ( this_node, regIsConfigured);
-        NODE_READ_BOOL          ( this_node, regIsActive);
-        NODE_READ_INT           ( this_node, regExpiresSec);
-        //NODE_READ_INT           ( this_node, regStatus);
-        NODE_READ_NUM_T         ( this_node, pjsip_status_code, regStatus);
-        NODE_READ_STRING        ( this_node, regStatusText);
-        NODE_READ_INT           ( this_node, regLastErr);
-        NODE_READ_BOOL          ( this_node, onlineStatus);
-        NODE_READ_STRING        ( this_node, onlineStatusText);
+        PJ_UNUSED_ARG( node );
     }
     void fromPj(const pjsua_acc_info &pai);
 };
+
+
+// base 1
+struct JsonMediaStream:             public PersistentObject{
+    //{
+    // pjmedia_endpt        *endpt;     /**< Media endpoint.        */
+    // pjmedia_codec_mgr        *codec_mgr;     /**< Codec manager instance.    */
+    // pjmedia_stream_info       si;        /**< Creation parameter.        */
+    // pjmedia_port      port;      /**< Port interface.        */
+    // pjmedia_channel      *enc;       /**< Encoding channel.      */
+    // pjmedia_channel      *dec;       /**< Decoding channel.      */
+
+    // pj_pool_t            *own_pool;      /**< Only created if not given  */
+
+    // pjmedia_dir           dir;       /**< Stream direction.      */
+    // void         *user_data;     /**< User data.         */
+    // pj_str_t          cname;     /**< SDES CNAME         */
+
+    // pjmedia_transport        *transport;     /**< Stream transport.      */
+
+    // pjmedia_codec        *codec;     /**< Codec instance being used. */
+    // pjmedia_codec_param       codec_param;   /**< Codec param.           */
+    // pj_int16_t           *enc_buf;       /**< Encoding buffer, when enc's
+                         // ptime is different than dec.
+                         // Otherwise it's NULL.        */
+
+    // unsigned          enc_samples_per_pkt;
+    // unsigned          enc_buf_size;  /**< Encoding buffer size, in
+                         // samples.            */
+    // unsigned          enc_buf_pos;   /**< First position in buf.     */
+    // unsigned          enc_buf_count; /**< Number of samples in the
+                         // encoding buffer.        */
+
+    // unsigned          plc_cnt;       /**< # of consecutive PLC frames*/
+    // unsigned          max_plc_cnt;   /**< Max # of PLC frames        */
+
+    // unsigned          vad_enabled;   /**< VAD enabled in param.      */
+    // unsigned          frame_size;    /**< Size of encoded base frame.*/
+    // pj_bool_t             is_streaming;  /**< Currently streaming?. This
+                         // is used to put RTP marker
+                         // bit.                */
+    // pj_uint32_t           ts_vad_disabled;/**< TS when VAD was disabled. */
+    // pj_uint32_t           tx_duration;   /**< TX duration in timestamp.  */
+
+    // pj_mutex_t           *jb_mutex;
+    // pjmedia_jbuf     *jb;        /**< Jitter buffer.         */
+    // char          jb_last_frm;   /**< Last frame type from jb    */
+    // unsigned          jb_last_frm_cnt;/**< Last JB frame type counter*/
+
+    // pjmedia_rtcp_session     rtcp;       /**< RTCP for incoming RTP.     */
+
+    // pj_uint32_t           rtcp_last_tx;  /**< RTCP tx time in timestamp  */
+    // pj_uint32_t           rtcp_interval; /**< Interval, in timestamp.    */
+    // pj_bool_t             initial_rr;    /**< Initial RTCP RR sent       */
+    // pj_bool_t                rtcp_sdes_bye_disabled;/**< Send RTCP SDES/BYE?*/
+    // void         *out_rtcp_pkt;  /**< Outgoing RTCP packet.      */
+    // unsigned          out_rtcp_pkt_size;
+                        // /**< Outgoing RTCP packet size. */
+
+    // /* RFC 2833 DTMF transmission queue: */
+    // int               tx_event_pt;   /**< Outgoing pt for dtmf.      */
+    // int               tx_dtmf_count; /**< # of digits in tx dtmf buf.*/
+    // struct dtmf           tx_dtmf_buf[32];/**< Outgoing dtmf queue.      */
+
+    // /* Incoming DTMF: */
+    // int               rx_event_pt;   /**< Incoming pt for dtmf.      */
+    // int               last_dtmf;     /**< Current digit, or -1.      */
+    // pj_uint32_t           last_dtmf_dur; /**< Start ts for cur digit.    */
+    // unsigned          rx_dtmf_count; /**< # of digits in dtmf rx buf.*/
+    // char          rx_dtmf_buf[32];/**< Incoming DTMF buffer.     */
+
+    // /* DTMF callback */
+    // void         (*dtmf_cb)(pjmedia_stream*, void*, int);
+    // void          *dtmf_cb_user_data;
+
+// #if defined(PJMEDIA_HANDLE_G722_MPEG_BUG) && (PJMEDIA_HANDLE_G722_MPEG_BUG!=0)
+    // /* Enable support to handle codecs with inconsistent clock rate
+     // * between clock rate in SDP/RTP & the clock rate that is actually used.
+     // * This happens for example with G.722 and MPEG audio codecs.
+     // */
+    // pj_bool_t             has_g722_mpeg_bug;
+                        // /**< Flag to specify whether
+                         // normalization process
+                         // is needed           */
+    // unsigned          rtp_tx_ts_len_per_pkt;
+                        // /**< Normalized ts length per packet
+                         // transmitted according to
+                         // 'erroneous' definition      */
+    // unsigned          rtp_rx_ts_len_per_frame;
+                        // /**< Normalized ts length per frame
+                         // received according to
+                         // 'erroneous' definition      */
+    // unsigned          rtp_rx_last_cnt;/**< Nb of frames in last pkt  */
+    // unsigned          rtp_rx_check_cnt;
+                        // /**< Counter of remote timestamp
+                         // checking */
+// #endif
+
+// #if defined(PJMEDIA_HAS_RTCP_XR) && (PJMEDIA_HAS_RTCP_XR != 0)
+    // pj_uint32_t           rtcp_xr_last_tx;  /**< RTCP XR tx time
+                                // in timestamp.           */
+    // pj_uint32_t           rtcp_xr_interval; /**< Interval, in timestamp. */
+    // pj_sockaddr           rtcp_xr_dest;     /**< Additional remote RTCP XR
+                            // dest. If sin_family is
+                            // zero, it will be ignored*/
+    // unsigned          rtcp_xr_dest_len; /**< Length of RTCP XR dest
+                                // address          */
+// #endif
+
+// #if defined(PJMEDIA_STREAM_ENABLE_KA) && PJMEDIA_STREAM_ENABLE_KA!=0
+    // pj_bool_t             use_ka;           /**< Stream keep-alive with non-
+                            // codec-VAD mechanism is
+                            // enabled?         */
+    // pj_timestamp      last_frm_ts_sent; /**< Timestamp of last sending
+                                // packet           */
+// #endif
+
+// #if TRACE_JB
+    // pj_oshandle_t        trace_jb_fd;        /**< Jitter tracing file handle.*/
+    // char        *trace_jb_buf;       /**< Jitter tracing buffer.     */
+// #endif
+
+    // pj_uint32_t           rtp_rx_last_ts;        /**< Last received RTP timestamp*/
+    // pj_status_t           rtp_rx_last_err;       /**< Last RTP recv() error */
+    //}
+public:
+    virtual void writeObject(ContainerNode &node) const throw(Error);
+    void readObject(const ContainerNode &node) throw(Error){
+        PJ_UNUSED_ARG( node );
+    }
+    void fromPj(pjmedia_stream &port);
+};
+struct JsonMediaPort:               public PersistentObject{
+public:
+    virtual void writeObject(ContainerNode &node) const throw(Error);
+    void readObject(const ContainerNode &node) throw(Error){
+        PJ_UNUSED_ARG( node );
+    }
+    void fromPj(pjmedia_port &port);
+};
+// 102 on_incoming_call
 struct JsonOnIncomingCallParam:     public PersistentObject{
     int         callId;
     string      info;
@@ -119,15 +230,70 @@ struct JsonOnIncomingCallParam:     public PersistentObject{
 public:
     virtual void writeObject(ContainerNode &node) const throw(Error);
     void readObject(const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("JsonOnIncomingCallParam");
-
-        NODE_READ_INT       ( this_node, callId);
-        NODE_READ_STRING    ( this_node, info);
-        NODE_READ_STRING    ( this_node, wholeMsg);
-        NODE_READ_STRING    ( this_node, srcAddress);
+        PJ_UNUSED_ARG( node );
     }
     void fromPj(int call_id, pjsip_rx_data &rdata);
 };
+// 104 on_call_media_state
+struct JsonOnMediaStateParam:       public PersistentObject{
+    string  Info;
+public:
+    virtual void writeObject(ContainerNode &node) const throw(Error);
+    void readObject(const ContainerNode &node) throw(Error){
+        PJ_UNUSED_ARG( node );
+    }
+    void fromPj(void);
+};
+// 107 on_stream_created2
+struct JsonOnStreamCreatedParam:    public PersistentObject{
+    int              CallId;         /// int        call_id
+    int              StreamIdx;      // unsigned    streamIdx;
+    int              DestroyPort;    // bool        destroyPort;
+    JsonMediaStream  Stream;         // void *stream;    // MediaStream stream;      // pjmedia_stream *stream;
+    JsonMediaPort    Port;           // void *pPort      // MediaPort   pPort;        // pjmedia_port   *port;
+public:
+    virtual void writeObject(ContainerNode &node) const throw(Error);
+    void readObject(const ContainerNode &node) throw(Error){
+        PJ_UNUSED_ARG( node );
+    }
+    void fromPj(int call_id, pjsua_on_stream_created_param &param);
+};
+// 108 on_stream_destroyed
+struct JsonOnStreamDestroyedParam:  public PersistentObject{
+    int              CallId;         /// int        call_id
+    int              StreamIdx;      /// unsigned   streamIdx;
+    JsonMediaStream  Stream;         // void *stream;    // MediaStream stream;      // pjmedia_stream *stream;
+public:
+    virtual void writeObject(ContainerNode &node) const throw(Error);
+    void readObject(const ContainerNode &node) throw(Error){
+        PJ_UNUSED_ARG( node );
+    }
+    void fromPj(int call_id, pjsua_on_stream_destroyed_param &stream);
+};
+// 109 on_dtmf_digit
+struct JsonOnDtmfDigitParam:        public PersistentObject{
+    int CallId;
+    string Digit;
+public:
+    virtual void writeObject(ContainerNode &node) const throw(Error);
+    void readObject(const ContainerNode &node) throw(Error){
+        PJ_UNUSED_ARG( node );
+    }
+    void fromPj(int call_id, pjsua_on_dtmf_digit_param &str);
+};
+// 111 on_call_transfer_request2
+struct JsonOnTransferRequest2Param: public PersistentObject{
+    int CallId;
+
+public:
+    virtual void writeObject(ContainerNode &node) const throw(Error);
+    void readObject(const ContainerNode &node) throw(Error){
+        PJ_UNUSED_ARG( node );
+    }
+    void fromPj(int call_id, pjsua_on_call_transfer_request2_param &str);
+};
+
+
 // 000000000000000000000000000000000000000000000000000000000
 struct Json_TimerEntry:             public PersistentObject{
     // void *user_data;
@@ -139,8 +305,7 @@ struct Json_TimerEntry:             public PersistentObject{
 public:
     virtual void writeObject        (ContainerNode &node) const throw(Error);
     void readObject (const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("Json_SipTxData");
-        PJ_UNUSED_ARG( this_node );
+        PJ_UNUSED_ARG( node );
     }
     void fromPj                     (pj_timer_entry  &entry);
     Json_TimerEntry(){
@@ -155,8 +320,7 @@ struct Json_SipTxData:              public PersistentObject{
 public:
     virtual void writeObject        (ContainerNode &node) const throw(Error);
     void readObject (const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("Json_SipTxData");
-        PJ_UNUSED_ARG( this_node );
+        PJ_UNUSED_ARG( node );
     }
     void fromPj                     (pjsip_tx_data &tdata);
     Json_SipTxData(){
@@ -171,8 +335,7 @@ struct Json_SipRxData:              public PersistentObject{
 public:
     virtual void writeObject        (ContainerNode &node) const throw(Error);
     void readObject                 (const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("Json_SipRxData");
-        PJ_UNUSED_ARG( this_node );
+        PJ_UNUSED_ARG( node );
     }
     void fromPj                     (pjsip_rx_data &rdata);
     Json_SipRxData(){
@@ -189,46 +352,42 @@ struct Json_SipTransaction:         public PersistentObject{
 public:
     virtual void writeObject        (ContainerNode &node) const throw(Error);
     void readObject                 (const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("Json_SipTransaction");
-        PJ_UNUSED_ARG( this_node );
+        PJ_UNUSED_ARG( node );
     }
     void fromPj                     (pjsip_transaction &tsx);
     Json_SipTransaction(){
     }
 };
 // 111111111111111111111111111111111111111111111111111111111
-struct Json_TimerEvent:             public PersistentObject{//struct{}
+struct Json_TimerEvent:             public PersistentObject{
     // (Void*) Timer entry, corresponds to pj_timer_entry
     Json_TimerEntry                 entry;  
 public:
     virtual void writeObject        (ContainerNode &node) const throw(Error);
     void readObject                 (const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("Json_TimerEvent");
-        PJ_UNUSED_ARG( this_node );
+        PJ_UNUSED_ARG( node );
     }
     Json_TimerEvent(){
     }
 };
 // 222222222222222222222222222222222222222222222222222222222
-struct Json_TxMsgEvent:             public PersistentObject{//struct{}
+struct Json_TxMsgEvent:             public PersistentObject{
     Json_SipTxData  tdata;
 public:
     virtual void writeObject        (ContainerNode &node) const throw(Error);
     void readObject                 (const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("Json_TxMsgEvent");
-        PJ_UNUSED_ARG( this_node );
+        PJ_UNUSED_ARG( node );
     }
     Json_TxMsgEvent(){
     }
 };
 // 333333333333333333333333333333333333333333333333333333333
-struct Json_RxMsgEvent:             public PersistentObject{//struct{}
+struct Json_RxMsgEvent:             public PersistentObject{
     Json_SipRxData  rdata;
 public:
     virtual void writeObject        (ContainerNode &node) const throw(Error);
     void readObject                 (const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("Json_RxMsgEvent");
-        PJ_UNUSED_ARG( this_node );
+        PJ_UNUSED_ARG( node );
     }
     Json_RxMsgEvent(){
     }
@@ -240,8 +399,7 @@ struct Json_TxErrorEvent:           public PersistentObject{
 public:
     virtual void writeObject        (ContainerNode &node) const throw(Error);
     void readObject                 (const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("Json_TxErrorEvent");
-        PJ_UNUSED_ARG( this_node );
+        PJ_UNUSED_ARG( node );
     }
     Json_TxErrorEvent(){
     }
@@ -258,8 +416,7 @@ struct Json_TsxStateEventSrc:       public PersistentObject{
 public:
     virtual void writeObject        (ContainerNode &node) const throw(Error);
     void readObject                 (const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("Json_TsxStateEventSrc");
-        PJ_UNUSED_ARG( this_node );
+        PJ_UNUSED_ARG( node );
     }
     Json_TsxStateEventSrc(){
     }
@@ -272,8 +429,7 @@ struct Json_TsxStateEvent:          public PersistentObject{
 public:
     virtual void writeObject        (ContainerNode &node) const throw(Error);
     void readObject                 (const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("Json_TsxStateEvent");
-        PJ_UNUSED_ARG( this_node );
+        PJ_UNUSED_ARG( node );
     }
     Json_TsxStateEvent(){
     }
@@ -292,8 +448,7 @@ struct Json_UserEvent:              public PersistentObject{
 public:
     virtual void writeObject        (ContainerNode &node) const throw(Error);
     void readObject                 (const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("Json_UserEvent");
-        PJ_UNUSED_ARG( this_node );
+        PJ_UNUSED_ARG( node );
     }
     void fromPj                     (const UserEvent &ev){
         PJ_UNUSED_ARG( ev );
@@ -301,6 +456,7 @@ public:
     Json_UserEvent(){
     }
 };
+
 
 // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 struct Json_SipEventBody:           public PersistentObject{
@@ -313,8 +469,7 @@ struct Json_SipEventBody:           public PersistentObject{
 public:
     virtual void writeObject        (ContainerNode &node) const throw(Error);
     void readObject                 (const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("Json_SipEventBody");
-        PJ_UNUSED_ARG( this_node );
+        PJ_UNUSED_ARG( node );
     }
     Json_SipEventBody(){
     }
@@ -326,8 +481,7 @@ struct Json_SipEvent:               public PersistentObject{
 public:
     virtual void writeObject        (ContainerNode &node) const throw(Error);
     void readObject                 (const ContainerNode &node) throw(Error){
-        ContainerNode this_node = node.readContainer("Json_SipEvent");
-        PJ_UNUSED_ARG( this_node );
+        PJ_UNUSED_ARG( node );
     }
     void fromPj                     (const pjsip_event &ev);
     Json_SipEvent() : type          (PJSIP_EVENT_UNKNOWN), pjEvent(NULL){
@@ -338,5 +492,29 @@ public:
  * @}  PJSUA2
  */
 } // namespace pj
+
+// 结构0 虚执行/虚销毁
+typedef struct PendingJob{
+    /** Perform the job */
+    virtual void execute(bool is_pending) = 0;
+
+    /** Virtual destructor */
+    virtual ~PendingJob() {}
+}PendingJob;
+// 结构1 call_id/回调参数/实执行
+typedef struct PendingOnDtmfDigitCallback : public PendingJob{
+    int call_id;
+    pj::JsonOnDtmfDigitParam prm; // OnDtmfDigitParam prm;
+
+    virtual void execute(bool is_pending){
+        PJ_UNUSED_ARG(is_pending);
+
+        // Call *call = Call::lookup(call_id);
+        // if (!call)
+            // return;
+
+        // call->onDtmfDigit(prm);
+    }
+}PendingOnDtmfDigitCallback;
 
 #endif  /* __PJSUA2_FOCUSUA_HPP__ */

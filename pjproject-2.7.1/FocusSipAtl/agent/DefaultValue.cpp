@@ -1,14 +1,17 @@
-/* $Id: DefaultValue.cpp 5676 2018-04-18 15:19:22Z chernic $ */
+/* $Id: focusua.hpp 5676 2018-04-18 15:19:22Z chernic $ */
+/* 
+ * Copyright (C) 2018 FOCUSTAR Inc. (http://www.focustar.net)
+ */
+
 #include "stdafx.h"
+#include "DefaultValue.h"
 
 #include "pjsua2/util.hpp"
 #include "pjsua2/json.hpp"
 #include "pjsua2/endpoint.hpp"
 #include "pjsua2/account.hpp"
-#include "pjsua2/focusua.hpp"
 
 using namespace std;
-#include "DefaultValue.h"
 #define THIS_FILE "DefaultValue.cpp"
 
 ///////////////////////////////////////////
@@ -35,7 +38,7 @@ static string GetCurrentDir(const string &path){
     CString ls_FileName;
 
     LPTSTR lpBuffer;
-    UINT uSize;
+    UINT   uSize;
     HANDLE hHeap;
     uSize=(GetCurrentDirectory(0,NULL))*sizeof(TCHAR);
     hHeap=GetProcessHeap();
@@ -77,16 +80,9 @@ static struct mod_tsx_layer{
 };
 
 ///////////////////////////////////////////
-// Common values settings
-Fs__Str pjsip_event2JsonSipEvent        (pjsip_event *e){
-    PJ_UNUSED_ARG( e );
-    
-    string  sCb   = string("");
-    Fs__Str bsCb  = str2bstr( sCb.data(), sCb.size());
-    return bsCb;
-}
-
-int     default_CallInfo( Focusip_Call_Info *c2){
+// Chernic: Default values only for test
+///////////////////////////////////////////
+int     default_CallInfo                            (Focusip_Call_Info *c2){
     pjsua_call_info *pc1;
     pjsua_call_info c1;
     pj_bzero(&c1,  sizeof(c1));
@@ -111,7 +107,7 @@ int     default_CallInfo( Focusip_Call_Info *c2){
     pc1 = NULL;
     return 0;
 }
-void    default_rx_data ( pjsip_rx_data * rdata ){
+void    default_rx_data                             (pjsip_rx_data * rdata ){
     // srcAddress
     pj_sockaddr_in  addr;
     pj_str_t        s;
@@ -128,7 +124,7 @@ void    default_rx_data ( pjsip_rx_data * rdata ){
     pj_memcpy(&rdata->pkt_info.src_addr,  &addr,  sizeof(addr) );
     rdata->pkt_info.len         = 9;
 }
-void    default_tx_data ( pjsip_tx_data * rdata ){
+void    default_tx_data                             (pjsip_tx_data * rdata ){
     // srcAddress
     pj_sockaddr_in  addr;
     pj_str_t        s;
@@ -145,9 +141,31 @@ void    default_tx_data ( pjsip_tx_data * rdata ){
     pj_memcpy(&rdata->tp_info.dst_addr,  &addr,  sizeof(addr) );
     rdata->tp_info.dst_addr_len = 9;
 }
+// 107a on_stream_created2      Bad values
+void    default_stream_created_param                (pjsua_on_stream_created_param * param){
+    // param->stream;       = stream;
+    param->stream_idx       = 2;
+    param->destroy_port     = 1;
+    // param->pjmedia_port  = pjmedia_port;
+}
+// 108a on_stream_destroyed     Bad values
+void    default_stream_destroyed_param              (pjsua_on_stream_destroyed_param * param){
+    // param->stream;       = stream;
+    param->stream_idx       = 2;
+    // param->destroy_port  = 1;
+    // param->pjmedia_port  = pjmedia_port;
+}
+// 109a on_dtmf_digit           Bad values
+void    default_transfer_request2_param             (pjsua_on_call_transfer_request2_param * param){
+    char buf[10];
+    pj_ansi_sprintf(buf, "%c", 99);
+    param->digit = (string)buf;
+}
 
 ///////////////////////////////////////////
-Fs__Str DefaultJsonSipEvent(void){
+// Chernic: Default JSON values only for test
+///////////////////////////////////////////
+Fs__Str default_json_sip_event                      (string sFilDir){
     pj::Json_SipEvent prm;
     pj::JsonDocument jDoc;
 
@@ -320,24 +338,36 @@ Fs__Str DefaultJsonSipEvent(void){
     }
 
 #ifndef DO_NOT_SAVE_JDOC
-    string sFilDir = string( "DefaultCallState.json" );
-    sFilDir = GetCurrentDir( "DefaultCallState.json" );
-    jDoc.saveFile( sFilDir );
+    if( 0 < sFilDir.size())
+        jDoc.saveFile(sFilDir);
+#else
+    PJ_UNUSED_ARG(sFilDir);
 #endif
-
     return bsCb;
 }
-Fs__Str DefaultJsonMediaStateParam(void){
-    pj::Json_SipEvent prm;
-
-    string  sCb   = string("");
+Fs__Str default_json_media_state                    (string sFilDir){
+    pj::JsonOnMediaStateParam prm;
+    prm.Info = string("none");
+    
+    pj::JsonDocument jDoc;
+    jDoc.writeObject(prm);
+    // prm.fromPj();
+    
+    string  sCb   = jDoc.saveString();
     Fs__Str bsCb  = str2bstr( sCb.data(), sCb.size());
+    
+#ifndef DO_NOT_SAVE_JDOC
+    if( 0 < sFilDir.size())
+        jDoc.saveFile(sFilDir);
+#else
+    PJ_UNUSED_ARG(sFilDir);
+#endif
 
     return bsCb;
 }
 ///////////////////////////////////////////
 // 100 TestString
-Fs__Str DefaultJsonTestString           (int call_id){
+Fs__Str DefaultJsonTestStringParam                  (string sFilDir, int call_id){
     pj::EpConfig prm;
     prm.uaConfig.maxCalls = 61;
     prm.uaConfig.userAgent = "DefaultTestJsonString";
@@ -349,20 +379,21 @@ Fs__Str DefaultJsonTestString           (int call_id){
     Fs__Str bsCb = str2bstr( sCb.data(), sCb.size());
 
 #ifndef DO_NOT_SAVE_JDOC
-    string sFilDir = string( "DefaultTestJsonString.json" );
-    sFilDir = GetCurrentDir( "DefaultTestJsonString.json" );
-    jDoc.saveFile( sFilDir );
+    if( 0 < sFilDir.size())
+        jDoc.saveFile(sFilDir);
+#else
+    PJ_UNUSED_ARG(sFilDir);
 #endif
 
     return bsCb;
 }
-// 101 CallState
-Fs__Str DefaultJsonCallState            (void){
-    Fs__Str bsCb  = DefaultJsonSipEvent();;
+// 101 on_call_state
+Fs__Str DefaultJsonCallStateParam                   (string sFilDir){
+    Fs__Str bsCb  = default_json_sip_event(sFilDir);;
     return bsCb;
 }
-// 102 IncomingCall
-Fs__Str DefaultJsonOnIncomingCallParam  (int call_id){
+// 102 on_incoming_call
+Fs__Str DefaultJsonOnIncomingCallParam              (string sFilDir, int call_id){
     pjsip_rx_data rdata;
     default_rx_data(&rdata);
 
@@ -375,23 +406,184 @@ Fs__Str DefaultJsonOnIncomingCallParam  (int call_id){
     Fs__Str bsCb = str2bstr( sCb.data(), sCb.size());
 
 #ifndef DO_NOT_SAVE_JDOC
-    string sFilDir = string( "DefaultIncomingCall.json" );
-    sFilDir = GetCurrentDir( "DefaultIncomingCall.json" );
-    jDoc.saveFile( sFilDir );
+    if( 0 < sFilDir.size())
+        jDoc.saveFile(sFilDir);
+#else
+    PJ_UNUSED_ARG(sFilDir);
 #endif
-    return bsCb;
-}
-// 103 TsxState
-Fs__Str DefaultJsonTsxState             (void){
-    Fs__Str bsCb  = DefaultJsonSipEvent();;
-    return bsCb;
-}
-// 
-Fs__Str DefaultJsonMediaState           (void){
-    // PJ_UNUSED_ARG( e );
-    // string  sCb   = string("");
-    // Fs__Str bsCb  = str2bstr( sCb.data(), sCb.size());
 
-    Fs__Str bsCb  = DefaultJsonSipEvent();;
+    return bsCb;
+}
+// 103 on_call_tsx_state
+Fs__Str DefaultJsonTsxStateParam                    (string sFilDir){
+    Fs__Str bsCb = default_json_sip_event(sFilDir);
+    return bsCb;
+}
+// 104 on_call_media_state
+Fs__Str DefaultJsonMediaStateParam                  (string sFilDir){
+    Fs__Str bsCb = default_json_media_state(sFilDir);;
+    return bsCb;
+}
+// 107b on_stream_created2          Bad values - Json Form struct
+Fs__Str DefaultJsonOnStreamCreatedParam             (string sFilDir, int call_id){
+    pjsua_on_stream_created_param param;
+    default_stream_created_param(&param);
+
+    pj::JsonOnStreamCreatedParam jParam;
+    jParam.fromPj(call_id, param);
+
+    pj::JsonDocument jDoc;
+    jDoc.writeObject(jParam);
+    string  sCb  = jDoc.saveString();
+    Fs__Str bsCb = str2bstr( sCb.data(), sCb.size());
+
+#ifndef DO_NOT_SAVE_JDOC
+    if( 0 < sFilDir.size())
+        jDoc.saveFile(sFilDir);
+#else
+    PJ_UNUSED_ARG(sFilDir);
+#endif
+
+    return bsCb;
+}
+// 108b on_stream_destroyed         Bad values - Json Form struct
+Fs__Str DefaultJsonOnStreamDestroyedParam           (string sFilDir, int call_id){
+    pjsua_on_stream_destroyed_param param;
+    default_stream_destroyed_param(&param);
+
+    pj::JsonOnStreamDestroyedParam jParam;
+    jParam.fromPj(call_id, param);
+
+    pj::JsonDocument jDoc;
+    jDoc.writeObject(jParam); 
+
+    string  sCb  = jDoc.saveString();
+    Fs__Str bsCb = str2bstr( sCb.data(), sCb.size());
+
+#ifndef DO_NOT_SAVE_JDOC
+    if( 0 < sFilDir.size())
+        jDoc.saveFile(sFilDir);
+#else
+    PJ_UNUSED_ARG(sFilDir);
+#endif
+
+    return bsCb;
+}
+// 109b on_dtmf_digit               Bad values - Json Form struct
+Fs__Str DefaultJsonOnDtmfDigitParam                 (string sFilDir, int call_id){
+    pjsua_on_dtmf_digit_param param;
+    default_dtmf_digit_param(&param);
+
+    pj::JsonOnDtmfDigitParam jParam;
+    jParam.fromPj(call_id, param);
+
+    pj::JsonDocument jDoc;
+    jDoc.writeObject(jParam); 
+
+    string  sCb  = jDoc.saveString();
+    Fs__Str bsCb = str2bstr( sCb.data(), sCb.size());
+
+#ifndef DO_NOT_SAVE_JDOC
+    if( 0 < sFilDir.size())
+        jDoc.saveFile(sFilDir);
+#else
+    PJ_UNUSED_ARG(sFilDir);
+#endif
+
+    return bsCb;
+}
+// 111b on_call_transfer_request2   Bad values - Json Form struct
+Fs__Str DefaultJsonOnTransferRequest2tParam         (string sFilDir, int call_id){
+    pjsua_on_call_transfer_request2_param param;
+    default_transfer_request2_param(&param);
+
+    pj::JsonOnTransferRequest2Param jParam;
+    jParam.fromPj(call_id, param);
+
+    pj::JsonDocument jDoc;
+    jDoc.writeObject(jParam); 
+
+    string  sCb  = jDoc.saveString();
+    Fs__Str bsCb = str2bstr( sCb.data(), sCb.size());
+
+#ifndef DO_NOT_SAVE_JDOC
+    if( 0 < sFilDir.size())
+        jDoc.saveFile(sFilDir);
+#else
+    PJ_UNUSED_ARG(sFilDir);
+#endif
+
+    return bsCb;
+}
+
+///////////////////////////////////////////
+// Chernic: Json form callback function 's param 
+///////////////////////////////////////////
+// 101 on_call_state
+// 103 on_call_tsx_state
+Fs__Str JsonStrFrom_pjsip_event                     (int call_id, pjsip_event *e){
+    PJ_UNUSED_ARG( e );
+    
+    string  sCb   = string("");
+    Fs__Str bsCb  = str2bstr( sCb.data(), sCb.size());
+    return bsCb;
+}
+// 102 on_incoming_call
+Fs__Str JsonStrFrom_pjsip_rx_data                   (int call_id, pjsip_rx_data *rdata){
+    pj::JsonOnIncomingCallParam prm;
+    pj::JsonDocument jDoc;
+    
+    prm.fromPj(call_id, *rdata);
+    jDoc.writeObject(prm);
+    
+    string  sCb  = jDoc.saveString();
+    Fs__Str bsCb = str2bstr( sCb.data(), sCb.size());
+
+// #ifndef DO_NOT_SAVE_JDOC
+    // if( 0 < sFilDir.size())
+        // jDoc.saveFile(sFilDir);
+// #else
+    // PJ_UNUSED_ARG(sFilDir);
+// #endif
+
+    return bsCb;
+}
+// 107o on_stream_created2
+Fs__Str JsonStrFrom_pjsua_on_stream_created_param   (int call_id, pjsua_on_stream_created_param &param){
+    pj::JsonOnStreamCreatedParam jParam;
+    pj::JsonDocument jDoc;
+
+    jParam.fromPj(call_id, param);
+    jDoc.writeObject(jParam);
+
+    string  sCb  = jDoc.saveString();
+    Fs__Str bsCb = str2bstr( sCb.data(), sCb.size());
+
+    return bsCb;
+}
+// 108o on_stream_destroyed
+Fs__Str JsonStrFrom_pjsua_on_stream_destroyed_param (int call_id, pjsua_on_stream_destroyed_param &param){
+    pj::JsonOnStreamDestroyedParam jParam;
+    pj::JsonDocument jDoc;
+
+    jParam.fromPj(call_id, param);
+    jDoc.writeObject(jParam);
+
+    string  sCb  = jDoc.saveString();
+    Fs__Str bsCb = str2bstr( sCb.data(), sCb.size());
+
+    return bsCb;
+}
+// 109  on_dtmf_digit
+Fs__Str JsonStrFrom_pjsua_on_dtmf_digit_param       (int call_id, pjsua_on_dtmf_digit_param &param){
+    pj::JsonOnDtmfDigitParam jParam;
+    pj::JsonDocument jDoc;
+
+    jParam.fromPj(call_id, param);
+    jDoc.writeObject(jParam);
+
+    string  sCb  = jDoc.saveString();
+    Fs__Str bsCb = str2bstr( sCb.data(), sCb.size());
+
     return bsCb;
 }

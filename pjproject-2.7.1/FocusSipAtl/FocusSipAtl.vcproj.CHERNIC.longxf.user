@@ -9,9 +9,9 @@
 			Name="Debug|Win32"
 			>
 			<DebugSettings
-				Command="$(SolutionDir)Deploy\i386-Win32-vc8-Debug\FocusSipAtlmain.exe"
-				WorkingDirectory="$(SolutionDir)Deploy\i386-Win32-vc8-Debug\"
-				CommandArguments=""
+				Command="C:\Program Files\Internet Explorer\iexplore.exe"
+				WorkingDirectory="E:\github\focusSipX\FSpjproject\pjproject-2.7.1\Deploy\i386-Win32-vc8-Debug"
+				CommandArguments="$(SolutionDir)Deploy\FocusSipAtl.html"
 				Attach="false"
 				DebuggerType="3"
 				Remote="1"

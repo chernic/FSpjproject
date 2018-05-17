@@ -25,7 +25,7 @@
 // CFocusSip
 class ATL_NO_VTABLE CFocusSip :
   public CComObjectRootEx<CComSingleThreadModel>,
-  public IDispatchImpl<IFocusSip, &IID_IFocusSip, &LIBID_FocusSipAtlLib, /*wMajor =*/ 1, /*wMinor =*/ 0>,
+//  public IDispatchImpl<IFocusSip, &IID_IFocusSip, &LIBID_FocusSipAtlLib, /*wMajor =*/ 1, /*wMinor =*/ 0>,
   public IPersistStreamInitImpl<CFocusSip>,
   public IOleControlImpl<CFocusSip>,
   public IOleObjectImpl<CFocusSip>,

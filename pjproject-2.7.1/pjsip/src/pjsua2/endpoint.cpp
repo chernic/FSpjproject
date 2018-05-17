@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
@@ -630,9 +630,7 @@ struct PendingOnDtmfDigitCallback : public PendingJob{
 //
 
 // E15----> F01
-void Endpoint::on_call_state(
-                        pjsua_call_id call_id,
-                        pjsip_event *e){
+void Endpoint::on_call_state        (pjsua_call_id call_id, pjsip_event *e){
     Call *call = Call::lookup(call_id);
     if (!call) {
         return;
@@ -647,12 +645,9 @@ void Endpoint::on_call_state(
      */
 }
 // E04----> F02
-void Endpoint::on_incoming_call(
-                        pjsua_acc_id acc_id, 
-                        pjsua_call_id call_id,
-                        pjsip_rx_data *rdata){
+void Endpoint::on_incoming_call     (pjsua_acc_id  acc_id,  pjsua_call_id call_id,pjsip_rx_data *rdata){
 
-//{ PJSUA only 20180510-1200
+//{ Chernic 20180510-1200 : PJSUA only 
     Account *acc = lookupAcc(acc_id, "on_incoming_call()");
     if (!acc) {
         pjsua_call_hangup(call_id, PJSIP_SC_INTERNAL_SERVER_ERROR, NULL, NULL);
@@ -677,7 +672,7 @@ void Endpoint::on_incoming_call(
     acc->onIncomingCall(prm);
 //}
 
-//{ PJSUA only 20180510-1200
+//{ Chernic 20180510-1200 : PJSUA only
     /* Free cloned rdata. */
     pjsip_rx_data_free_cloned(call->incoming_data);
     call->incoming_data = NULL;
@@ -692,15 +687,11 @@ void Endpoint::on_incoming_call(
         pjsua_call_hangup(call_id, PJSIP_SC_INTERNAL_SERVER_ERROR, NULL, NULL);
     }
 }
-
 // E16----> F03
-void Endpoint::on_call_tsx_state(
-                        pjsua_call_id call_id,
-                        pjsip_transaction *tsx,
-                        pjsip_event *e){
+void Endpoint::on_call_tsx_state    (pjsua_call_id call_id, pjsip_transaction *tsx,pjsip_event *e){
     PJ_UNUSED_ARG(tsx);
-
-//{ PJSUA only 20180510-1200
+    
+//{ Chernic 20180510-1200 : PJSUA only 
     Call *call = Call::lookup(call_id);
     if (!call) {
     return;
@@ -714,10 +705,9 @@ void Endpoint::on_call_tsx_state(
     call->onCallTsxState(prm);
 }
 // E17----> F04
-void Endpoint::on_call_media_state(
-                        pjsua_call_id call_id){
+void Endpoint::on_call_media_state  (pjsua_call_id call_id){
 
-//{ PJSUA only 20180510-1200
+//{ Chernic 20180510-1200 : PJSUA only
     Call *call = Call::lookup(call_id);
     if (!call) {
     return;
@@ -728,14 +718,13 @@ void Endpoint::on_call_media_state(
     call->processMediaUpdate(prm);
 }
 // E19----> F07
-void Endpoint::on_stream_created2(
-                        pjsua_call_id call_id,
-                        pjsua_on_stream_created_param *param){
+void Endpoint::on_stream_created2   (pjsua_call_id call_id, pjsua_on_stream_created_param *param){
+//{ Chernic 20180510-1200 : PJSUA only
     Call *call = Call::lookup(call_id);
     if (!call) {
     return;
     }
-
+//}
     OnStreamCreatedParam prm;
     prm.stream = param->stream;
     prm.streamIdx = param->stream_idx;
@@ -748,15 +737,13 @@ void Endpoint::on_stream_created2(
     param->port = (pjmedia_port *)prm.pPort;
 }
 // E20----> F08
-void Endpoint::on_stream_destroyed(
-                        pjsua_call_id call_id,
-                        pjmedia_stream *strm,
-                        unsigned stream_idx){
+void Endpoint::on_stream_destroyed  (pjsua_call_id call_id, pjmedia_stream *strm, unsigned stream_idx){
+//{ Chernic 20180510-1200 : PJSUA only
     Call *call = Call::lookup(call_id);
     if (!call) {
     return;
     }
-    
+//}
     OnStreamDestroyedParam prm;
     prm.stream = strm;
     prm.streamIdx = stream_idx;
@@ -764,32 +751,36 @@ void Endpoint::on_stream_destroyed(
     call->onStreamDestroyed(prm);
 }
 // E21----> F09
-void Endpoint::on_dtmf_digit(
-                        pjsua_call_id call_id, int digit){
+void Endpoint::on_dtmf_digit(pjsua_call_id call_id, int digit){
+
+//{ Chernic 20180510-1200 : PJSUA only
     Call *call = Call::lookup(call_id);
     if (!call) {
-    return;
+        return;
     }
-    
+//}
+
     PendingOnDtmfDigitCallback *job = new PendingOnDtmfDigitCallback;
     job->call_id = call_id;
     char buf[10];
     pj_ansi_sprintf(buf, "%c", digit);
     job->prm.digit = (string)buf;
-    
+
+//{ Chernic 20180510-1200 : PJSUA only
     Endpoint::instance().utilAddPendingJob(job);
+//}
+
 }
 // E22----> F11
-void Endpoint::on_call_transfer_request2(
-                        pjsua_call_id call_id,
-                        const pj_str_t *dst,
-                        pjsip_status_code *code,
-                        pjsua_call_setting *opt){
+void Endpoint::on_call_transfer_request2(pjsua_call_id call_id,const pj_str_t *dst,pjsip_status_code *code,pjsua_call_setting *opt){
+    
+//{ Chernic 20180510-1200 : PJSUA only
     Call *call = Call::lookup(call_id);
     if (!call) {
     return;
     }
-    
+//}
+
     OnCallTransferRequestParam prm;
     prm.dstUri = pj2Str(*dst);
     prm.statusCode = *code;
@@ -797,8 +788,11 @@ void Endpoint::on_call_transfer_request2(
     
     call->onCallTransferRequest(prm);
     
+//{ Chernic 20180510-1200 : After callback
     *code = prm.statusCode;
     *opt = prm.opt.toPj();
+//}
+
 }
 // E23----> F12
 void Endpoint::on_call_transfer_status(
