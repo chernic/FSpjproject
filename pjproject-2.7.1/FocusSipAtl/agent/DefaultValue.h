@@ -72,9 +72,10 @@ static int call_info2CallInfo                       (pjsua_call_info* c1, Focusi
 void    default_rx_data                             (pjsip_rx_data * rdata);
 void    default_tx_data                             (pjsip_tx_data * rdata);
 int     default_CallInfo                            (Focusip_Call_Info *c2);
-void    default_stream_created_param                (pjsua_on_stream_created_param   *param);
-void    default_stream_destroyed_param              (pjsua_on_stream_destroyed_param *param);
-void    default_dtmf_digit_param                    (pjsua_on_dtmf_digit_param       *param);
+void    default_stream_created_param                (pjsua_on_stream_created_param          *param);
+void    default_stream_destroyed_param              (pjsua_on_stream_destroyed_param        *param);
+void    default_dtmf_digit_param                    (pjsua_on_dtmf_digit_param              *param);
+void    default_transfer_request2_param             (pjsua_on_call_transfer_request2_param  *param);
 
 ///////////////////////////////////////////
 // Chernic: Default JSON values only for test

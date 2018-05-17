@@ -156,10 +156,13 @@ void    default_stream_destroyed_param              (pjsua_on_stream_destroyed_p
     // param->pjmedia_port  = pjmedia_port;
 }
 // 109a on_dtmf_digit           Bad values
-void    default_transfer_request2_param             (pjsua_on_call_transfer_request2_param * param){
+void    default_dtmf_digit_param                    (pjsua_on_dtmf_digit_param * param){
     char buf[10];
     pj_ansi_sprintf(buf, "%c", 99);
     param->digit = (string)buf;
+}
+// 111a on_dtmf_digit           Bad values
+void    default_transfer_request2_param             (pjsua_on_call_transfer_request2_param * param){
 }
 
 ///////////////////////////////////////////

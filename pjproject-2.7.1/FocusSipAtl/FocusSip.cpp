@@ -1555,6 +1555,7 @@ STDMETHODIMP CFocusSip::aboutbox        (Fs__Str *ret){
     int      nCb104     = SysStringLen                                  (sCb104);
     HRESULT  Ret104     = CFocusSip_Instance->Fire_OnJsonMediaState     (call_id, sCb104, nCb104 );
 
+/* XXX
     Fs__Str  sCb106     = DefaultJsonOnStreamCreatedParam   (string("a106.json"), call_id);
     int      nCb106     = SysStringLen                                  (sCb106);
     HRESULT  ret106     = CFocusSip_Instance->Fire_OnJsonStreamCreated  (call_id, sCb106, nCb106);
@@ -1574,7 +1575,7 @@ STDMETHODIMP CFocusSip::aboutbox        (Fs__Str *ret){
     // Fs__Str  sCb111     = DefaultJsonOnTransferRequest2tParam(string("a111.json"), call_id);
     // int      nCb111     = SysStringLen                                  (sCb109);
     // HRESULT  ret111     = CFocusSip_Instance->Fire_OnTransferRequest2   (call_id, sCb111, nCb111);
-
+*/
     /*
         HRESULT result=0;
 
@@ -1903,10 +1904,11 @@ static void on_stream_created           (pjsua_call_id call_id, pjmedia_stream *
 }
 /// FocusSip : Callback 107 pjsua.h
 static void on_stream_created2          (pjsua_call_id call_id, pjsua_on_stream_created_param *param){
-
+/* XXX
     Fs__Str     sCb107      = JsonStrFrom_pjsua_on_stream_created_param     (call_id, *param);
     int         nCb107      = SysStringLen                                  (sCb107);
     HRESULT     ret107      = CFocusSip_Instance->Fire_OnJsonStreamCreated2 (call_id, sCb107, nCb107);
+*/
 }
 /// FocusSip : Callback 108 pjsua.h
 static void on_stream_destroyed         (pjsua_call_id call_id, pjmedia_stream *strm, unsigned stream_idx){
@@ -1915,10 +1917,11 @@ static void on_stream_destroyed         (pjsua_call_id call_id, pjmedia_stream *
     param.stream_idx    = stream_idx;
     // param.destroy_port  = destroy_port;
     // param.port          = port;
-
+/* XXX
     Fs__Str     sCb108      = JsonStrFrom_pjsua_on_stream_destroyed_param   (call_id, param);
     int         nCb108      = SysStringLen                                  (sCb108);
     HRESULT     ret108      = CFocusSip_Instance->Fire_OnJsonStreamCreated2 (call_id, sCb108, nCb108);
+*/
 }
 /// FocusSip : Callback 109 pjsua.h
 static void on_dtmf_digit               (pjsua_call_id call_id, int digit){
@@ -1927,10 +1930,11 @@ static void on_dtmf_digit               (pjsua_call_id call_id, int digit){
     char buf[10];
     pj_ansi_sprintf(buf, "%c", digit);
     param.digit = (string)buf;
-
+/* XXX
     Fs__Str     sCb109      = JsonStrFrom_pjsua_on_dtmf_digit_param         (call_id, param);
     int         nCb109      = SysStringLen                                  (sCb109);
     HRESULT     ret109      = CFocusSip_Instance->Fire_OnJsonDtmfDigit      (call_id, sCb109, nCb109);
+*/
 }
 /// FocusSip : Callback 111 pjsua.h
 static void on_call_transfer_request2   (pjsua_call_id call_id, const pj_str_t *dst, pjsip_status_code *code, pjsua_call_setting *opt){
